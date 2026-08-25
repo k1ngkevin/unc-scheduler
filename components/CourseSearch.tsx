@@ -1,53 +1,22 @@
 "use client";
+
 import { useState } from "react";
 import CourseCard from "./CourseCard";
-
-type Course = {
-  class_number: number;
-  course_id: string;
-  subject: string;
-  course_number: string;
-  title: string;
-};
+import { Course, Section } from "@/lib/types";
 
 type CourseSearchProps = {
+  className?: string;
   courses: Course[];
+  onCourseSelect: (course: Course) => void;
 };
 
-export default function CourseSearch({ courses }: CourseSearchProps) {
+export default function CourseSearch({
+  className,
+  courses,
+  onCourseSelect,
+}: CourseSearchProps) {
   const [query, setQuery] = useState("");
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
-
-  async function handleSearch() {
-    const input = query.trim().toLocaleUpperCase();
-
-    if (!input) {
-      return;
-    }
-
-    const search_parts = input.split(/\s+/);
-    const subject = search_parts[0];
-    const number = search_parts[1];
-
-    const params = new URLSearchParams({
-      term: "2269",
-      subject: subject,
-    });
-
-    if (number) {
-      params.set("number", number);
-    }
-
-    const response = await fetch(`/course?${params.toString()}`);
-
-    if (!response) {
-      console.error("failed to fetch course");
-      return;
-    }
-
-    const data = await response.json();
-    // setCourses(data);
-  }
 
   function filterCourse(query: string) {
     const normalizedQuery = query.trim().toUpperCase();
@@ -79,7 +48,7 @@ export default function CourseSearch({ courses }: CourseSearchProps) {
   }
 
   return (
-    <section className="w-full">
+    <section className={className ?? ""}>
       <div className="rounded-2xl border border-white/10 bg-zinc-900 p-4 shadow-xl shadow-black/20 sm:p-5">
         <label
           htmlFor="course-search"
@@ -107,10 +76,11 @@ export default function CourseSearch({ courses }: CourseSearchProps) {
       <div className="mt-6 grid gap-3">
         {filteredCourses.map((course) => (
           <CourseCard
-            key={course.class_number}
+            key={course.course_id}
             subject={course.subject}
             number={course.course_number}
             title={course.title}
+            onClick={() => onCourseSelect(course)}
           />
         ))}
       </div>
