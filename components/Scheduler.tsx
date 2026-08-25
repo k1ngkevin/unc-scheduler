@@ -61,33 +61,12 @@ export default function Scheduler() {
   return (
     <main>
       <div className="flex gap-6">
-        <div className="flex-1">
-          <CourseSearch courses={courses} onCourseSelect={onCourseClick} />
-
-          {selectedCourse && (
-            <div className="mt-6 grid gap-3">
-              <h2 className="text-xl font-semibold text-white">
-                {selectedCourse.subject} {selectedCourse.course_number} sections
-              </h2>
-
-              {selectedCourse.sections.map((section) => (
-                <button
-                  type="button"
-                  key={section.class_number}
-                  className="rounded-xl bg-zinc-800 p-4 text-left"
-                >
-                  <p className="font-semibold text-white">
-                    Section {section.section}
-                  </p>
-
-                  <p className="text-sm text-zinc-400">
-                    {section.available_seats} seats available
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <CourseSearch
+          className="flex-1"
+          courses={courses}
+          selectedCourse={selectedCourse}
+          onCourseSelect={onCourseClick}
+        />
 
         <ScheduleCalendar className="flex-2" selectedSections={[]} />
       </div>

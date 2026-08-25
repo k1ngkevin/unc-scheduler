@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import CourseCard from "./CourseCard";
-import { Course, Section } from "@/lib/types";
+import { Course, CourseWithSections, Section } from "@/lib/types";
 
 type CourseSearchProps = {
   className?: string;
   courses: Course[];
+  selectedCourse: CourseWithSections | null;
   onCourseSelect: (course: Course) => void;
 };
 
 export default function CourseSearch({
   className,
   courses,
+  selectedCourse,
   onCourseSelect,
 }: CourseSearchProps) {
   const [query, setQuery] = useState("");
@@ -75,13 +77,34 @@ export default function CourseSearch({
 
       <div className="mt-6 grid gap-3">
         {filteredCourses.map((course) => (
-          <CourseCard
-            key={course.course_id}
-            subject={course.subject}
-            number={course.course_number}
-            title={course.title}
-            onClick={() => onCourseSelect(course)}
-          />
+          <div key={course.course_id}>
+            <CourseCard
+              subject={course.subject}
+              number={course.course_number}
+              title={course.title}
+              onClick={() => onCourseSelect(course)}
+            />
+
+            {selectedCourse?.course_id === course.course_id && (
+              <div className="mt-2 grid gap-2 pl-4">
+                {selectedCourse.sections.map((section) => (
+                  <button
+                    type="button"
+                    key={section.class_number}
+                    className="rounded-lg border border-white/10 bg-zinc-900 p-3 text-left"
+                  >
+                    <p className="font-medium text-white">
+                      Section {section.section}
+                    </p>
+
+                    <p className="text-sm text-zinc-400">
+                      {section.available_seats} seats available
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         ))}
       </div>
     </section>
