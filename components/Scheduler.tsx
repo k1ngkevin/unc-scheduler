@@ -51,13 +51,16 @@ export default function Scheduler() {
   }, [allSections]);
 
   function onCourseClick(course: Course) {
-    setSelectedCourse({
+    setSelectedCourse((current) => ({
       ...course,
+      section_toggle:
+        current?.section_toggle == null ? false : !current.section_toggle,
       sections: allSections.filter(
         (section) => section.course_id === course.course_id,
       ),
-    });
+    }));
   }
+
   return (
     <main>
       <div className="flex gap-6">
