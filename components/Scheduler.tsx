@@ -7,8 +7,9 @@ import ScheduleCalendar from "./Calendar";
 
 export default function Scheduler() {
   const [allSections, setAllSections] = useState<Section[]>([]);
-  const [selectedCourse, setSelectedCourse] =
-    useState<CourseWithSections | null>(null);
+  const [selectedCourses, setSelectedCourses] = useState<CourseWithSections[]>(
+    [],
+  );
 
   useEffect(() => {
     async function fetchCourseData() {
@@ -51,14 +52,26 @@ export default function Scheduler() {
   }, [allSections]);
 
   function onCourseClick(course: Course) {
-    setSelectedCourse((current) => ({
-      ...course,
-      section_toggle:
-        current?.section_toggle == null ? false : !current.section_toggle,
-      sections: allSections.filter(
-        (section) => section.course_id === course.course_id,
-      ),
-    }));
+    setSelectedCourses((previousCourses) => {
+      const alreadySelected = previousCourses.some(
+        (selected) => selected.course_id === course.course_id,
+      );
+
+      if (alreadySelected) {
+        return previousCourses.filter(
+          (selected) => selected.course_id !== course.course_id,
+        );
+      }
+
+      const newCourse: CourseWithSections = {
+        ...course,
+        section_toggle: true,
+        sections: allSections.filter(
+          (section) => section.course_id === course.course_id,
+        ),
+      };
+      return [...previousCourses, newCourse];
+    });
   }
 
   return (
@@ -67,7 +80,7 @@ export default function Scheduler() {
         <CourseSearch
           className="flex-1"
           courses={courses}
-          selectedCourse={selectedCourse}
+          selectedCourses={selectedCourses}
           onCourseSelect={onCourseClick}
         />
 
