@@ -1,8 +1,10 @@
 import {
   PlusIcon,
   ChevronDownIcon,
+  ChevronUpIcon,
   TrashIcon,
 } from "@heroicons/react/24/solid";
+import { Course } from "@/lib/types";
 
 type CourseCardVariant = "selected" | "notSelected";
 
@@ -11,6 +13,8 @@ type CourseCardProps = {
   number: string;
   title: string;
   variant: CourseCardVariant;
+  expanded?: boolean;
+  removeCourse?: () => void;
   onClick?: () => void;
 };
 
@@ -19,6 +23,8 @@ export default function CourseCard({
   number,
   title,
   variant,
+  expanded,
+  removeCourse,
   onClick,
 }: CourseCardProps) {
   function getIcons(cardVariant: CourseCardVariant) {
@@ -26,8 +32,20 @@ export default function CourseCard({
       case "selected":
         return (
           <div className="flex gap-3">
-            <ChevronDownIcon className="size-5" />
-            <TrashIcon className="size-5" />
+            {expanded ? (
+              <ChevronUpIcon className="size-5" />
+            ) : (
+              <ChevronDownIcon className="size-5" />
+            )}
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                removeCourse?.();
+              }}
+            >
+              <TrashIcon className="size-5" />
+            </button>
           </div>
         );
       case "notSelected":

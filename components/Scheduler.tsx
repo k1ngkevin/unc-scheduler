@@ -74,6 +74,14 @@ export default function Scheduler() {
     });
   }
 
+  function removeSelectedCourse(course: Course) {
+    setSelectedCourses((previousCourses) =>
+      previousCourses.filter(
+        (selectedCourse) => selectedCourse.course_id !== course.course_id,
+      ),
+    );
+  }
+
   function toggleCourseDropdown(courseId: string) {
     setExpandedCourseIds((previousIds) => {
       const nextIds = new Set(previousIds);
@@ -97,6 +105,7 @@ export default function Scheduler() {
           selectedCourses={selectedCourses}
           expandedCourseIds={expandedCourseIds}
           addCourse={addCourse}
+          removeCourse={removeSelectedCourse}
           dropdownCourse={toggleCourseDropdown}
         />
 

@@ -10,6 +10,7 @@ type CourseSearchProps = {
   selectedCourses: CourseWithSections[];
   expandedCourseIds: Set<string>;
   addCourse: (course: Course) => void;
+  removeCourse: (course: Course) => void;
   dropdownCourse: (courseId: string) => void;
 };
 
@@ -19,6 +20,7 @@ export default function CourseSearch({
   selectedCourses,
   expandedCourseIds,
   addCourse,
+  removeCourse,
   dropdownCourse,
 }: CourseSearchProps) {
   const [query, setQuery] = useState("");
@@ -64,6 +66,8 @@ export default function CourseSearch({
               number={course.course_number}
               title={course.title}
               variant={"selected"}
+              expanded={expandedCourseIds.has(course.course_id)}
+              removeCourse={() => removeCourse(course)}
               onClick={() => dropdownCourse(course.course_id)}
             />
 
@@ -125,6 +129,7 @@ export default function CourseSearch({
               number={course.course_number}
               title={course.title}
               variant={"notSelected"}
+              removeCourse={() => removeCourse(course)}
               onClick={() => addCourse(course)}
             />
           </div>
