@@ -41,6 +41,5 @@ export type Course = {
 };
 
 export type CourseWithSections = Course & {
-  section_toggle: boolean;
   sections: Section[];
 };

@@ -10,6 +10,9 @@ export default function Scheduler() {
   const [selectedCourses, setSelectedCourses] = useState<CourseWithSections[]>(
     [],
   );
+  const [expandedCourseIds, setExpandedCourseIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   useEffect(() => {
     async function fetchCourseData() {
@@ -51,26 +54,37 @@ export default function Scheduler() {
     return Array.from(uniqueCourses.values());
   }, [allSections]);
 
-  function onCourseClick(course: Course) {
+  function addCourse(course: Course) {
     setSelectedCourses((previousCourses) => {
       const alreadySelected = previousCourses.some(
         (selected) => selected.course_id === course.course_id,
       );
 
       if (alreadySelected) {
-        return previousCourses.filter(
-          (selected) => selected.course_id !== course.course_id,
-        );
+        return previousCourses;
       }
 
-      const newCourse: CourseWithSections = {
+      const courseWithSections: CourseWithSections = {
         ...course,
-        section_toggle: true,
         sections: allSections.filter(
           (section) => section.course_id === course.course_id,
         ),
       };
-      return [...previousCourses, newCourse];
+      return [...previousCourses, courseWithSections];
+    });
+  }
+
+  function toggleCourseDropdown(courseId: string) {
+    setExpandedCourseIds((previousIds) => {
+      const nextIds = new Set(previousIds);
+
+      if (nextIds.has(courseId)) {
+        nextIds.delete(courseId);
+      } else {
+        nextIds.add(courseId);
+      }
+
+      return nextIds;
     });
   }
 
@@ -81,7 +95,9 @@ export default function Scheduler() {
           className="flex-1"
           courses={courses}
           selectedCourses={selectedCourses}
-          onCourseSelect={onCourseClick}
+          expandedCourseIds={expandedCourseIds}
+          addCourse={addCourse}
+          dropdownCourse={toggleCourseDropdown}
         />
 
         <ScheduleCalendar className="flex-2" selectedSections={[]} />
