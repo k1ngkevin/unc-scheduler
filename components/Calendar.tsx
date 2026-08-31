@@ -33,7 +33,7 @@ export default function ScheduleCalendar({
     { label: "Fri", code: "Fr" },
   ];
   const START_HOUR = 8;
-  const PIXELS_PER_HOUR = 64;
+  const PIXELS_PER_HOUR = 72;
 
   function timeToMinutes(time: string) {
     const [hours, minutes] = time.split(":", 2);
@@ -52,7 +52,7 @@ export default function ScheduleCalendar({
   }
 
   return (
-    <div className={`w-full overflow-x-auto ${className ?? ""}`}>
+    <div className={`w-full overflow-auto ${className ?? ""}`}>
       <div className="min-w-[800px]">
         <div className="grid grid-cols-[70px_repeat(5,1fr)]">
           <div />
@@ -69,7 +69,11 @@ export default function ScheduleCalendar({
         <div className="grid grid-cols-[70px_repeat(5,1fr)]">
           <div>
             {times.map((time) => (
-              <div key={time} className="relative h-16 text-sm text-zinc-400">
+              <div
+                key={time}
+                className="relative text-sm text-zinc-400"
+                style={{ height: `${PIXELS_PER_HOUR}px` }}
+              >
                 <span className="absolute right-2 top-0 -translate-y-1/2">
                   {time}
                 </span>
@@ -83,7 +87,11 @@ export default function ScheduleCalendar({
               className="relative border-l border-zinc-700 last:border-r"
             >
               {times.map((time) => (
-                <div key={time} className="h-16 border-b border-zinc-700" />
+                <div
+                  key={time}
+                  className="border-b border-zinc-700"
+                  style={{ height: `${PIXELS_PER_HOUR}px` }}
+                />
               ))}
 
               {selectedSections.flatMap((section) =>

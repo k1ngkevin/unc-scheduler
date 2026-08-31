@@ -121,10 +121,10 @@ export default function Scheduler() {
   }
 
   return (
-    <main>
-      <div className="flex gap-6">
+    <main className="mt-4">
+      <div className="flex flex-col gap-6 lg:h-[calc(100vh-8.5rem)] lg:min-h-[36rem] lg:flex-row">
         <CourseSearch
-          className="max-h-[calc(100vh-12rem)] flex-1 overflow-y-auto pr-2"
+          className="max-h-[36rem] w-full overflow-y-auto pr-2 lg:h-full lg:max-h-none lg:w-[30%] lg:min-w-80 lg:shrink-0"
           courses={courses}
           selectedCourses={selectedCourses}
           selectedSections={selectedSections}
@@ -137,7 +137,7 @@ export default function Scheduler() {
         />
 
         <ScheduleCalendar
-          className="flex-2"
+          className="h-[36rem] min-w-0 flex-1 lg:h-full"
           selectedSections={selectedSections}
         />
       </div>
