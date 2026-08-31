@@ -34,7 +34,7 @@ export default function ScheduleCalendar({
           {days.map((day) => (
             <div
               key={day}
-              className="border-b border-l border-zinc-700 p-3 text-center font-semibold"
+              className="border-b border-zinc-700 p-3 text-center font-semibold"
             >
               {day}
             </div>
@@ -53,7 +53,10 @@ export default function ScheduleCalendar({
           </div>
 
           {days.map((day) => (
-            <div key={day} className="relative border-l border-zinc-700">
+            <div
+              key={day}
+              className="relative border-l border-zinc-700 last:border-r"
+            >
               {times.map((time) => (
                 <div key={time} className="h-16 border-b border-zinc-700" />
               ))}
