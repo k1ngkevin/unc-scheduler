@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import CourseCard from "./CourseCard";
+import CourseSections from "./CourseSections";
 import { Course, CourseWithSections } from "@/lib/types";
 
 type CourseSearchProps = {
@@ -70,29 +71,8 @@ export default function CourseSearch({
               removeCourse={() => removeCourse(course)}
               onClick={() => dropdownCourse(course.course_id)}
             />
-
-            {selectedCourses.map(
-              (selectedCourse) =>
-                selectedCourse.course_id === course.course_id &&
-                expandedCourseIds.has(selectedCourse.course_id) && (
-                  <div className="mt-2 grid gap-2 pl-4" key={course.course_id}>
-                    {selectedCourse.sections.map((section) => (
-                      <button
-                        type="button"
-                        key={section.class_number}
-                        className="rounded-lg border border-white/10 bg-zinc-900 p-3 text-left"
-                      >
-                        <p className="font-medium text-white">
-                          Section {section.section}
-                        </p>
-
-                        <p className="text-sm text-zinc-400">
-                          {section.available_seats} seats available
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                ),
+            {expandedCourseIds.has(course.course_id) && (
+              <CourseSections sections={course.sections} />
             )}
           </div>
         ))}

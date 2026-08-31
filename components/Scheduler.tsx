@@ -100,7 +100,7 @@ export default function Scheduler() {
     <main>
       <div className="flex gap-6">
         <CourseSearch
-          className="flex-1"
+          className="max-h-[calc(100vh-12rem)] flex-1 overflow-y-auto pr-2"
           courses={courses}
           selectedCourses={selectedCourses}
           expandedCourseIds={expandedCourseIds}

@@ -4,7 +4,6 @@ import {
   ChevronUpIcon,
   TrashIcon,
 } from "@heroicons/react/24/solid";
-import { Course } from "@/lib/types";
 
 type CourseCardVariant = "selected" | "notSelected";
 
@@ -33,19 +32,17 @@ export default function CourseCard({
         return (
           <div className="flex gap-3">
             {expanded ? (
-              <ChevronUpIcon className="size-5" />
+              <ChevronUpIcon className="size-5 cursor-pointer text-zinc-400 transition-colors hover:text-white" />
             ) : (
-              <ChevronDownIcon className="size-5" />
+              <ChevronDownIcon className="size-5 cursor-pointer text-zinc-400 transition-colors hover:text-white" />
             )}
-            <button
-              type="button"
+            <TrashIcon
+              className="size-5 cursor-pointer text-zinc-400 transition-colors hover:text-red-400"
               onClick={(event) => {
                 event.stopPropagation();
                 removeCourse?.();
               }}
-            >
-              <TrashIcon className="size-5" />
-            </button>
+            />
           </div>
         );
       case "notSelected":
