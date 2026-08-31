@@ -3,15 +3,18 @@
 import { useMemo, useState } from "react";
 import CourseCard from "./CourseCard";
 import CourseSections from "./CourseSections";
-import { Course, CourseWithSections } from "@/lib/types";
+import { Course, CourseWithSections, Section } from "@/lib/types";
 
 type CourseSearchProps = {
   className?: string;
   courses: Course[];
   selectedCourses: CourseWithSections[];
+  selectedSections: Section[];
   expandedCourseIds: Set<string>;
   addCourse: (course: Course) => void;
   removeCourse: (course: Course) => void;
+  selectSection: (section: Section) => void;
+  removeSection: (section: Section) => void;
   dropdownCourse: (courseId: string) => void;
 };
 
@@ -19,9 +22,12 @@ export default function CourseSearch({
   className,
   courses,
   selectedCourses,
+  selectedSections,
   expandedCourseIds,
   addCourse,
   removeCourse,
+  selectSection,
+  removeSection,
   dropdownCourse,
 }: CourseSearchProps) {
   const [query, setQuery] = useState("");
@@ -72,7 +78,12 @@ export default function CourseSearch({
               onClick={() => dropdownCourse(course.course_id)}
             />
             {expandedCourseIds.has(course.course_id) && (
-              <CourseSections sections={course.sections} />
+              <CourseSections
+                sections={course.sections}
+                selectedSections={selectedSections}
+                selectSection={selectSection}
+                removeSection={removeSection}
+              />
             )}
           </div>
         ))}

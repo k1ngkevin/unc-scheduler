@@ -10,6 +10,7 @@ export default function Scheduler() {
   const [selectedCourses, setSelectedCourses] = useState<CourseWithSections[]>(
     [],
   );
+  const [selectedSections, setSelectedSections] = useState<Section[]>([]);
   const [expandedCourseIds, setExpandedCourseIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -74,10 +75,33 @@ export default function Scheduler() {
     });
   }
 
+  function selectSection(section: Section) {
+    setSelectedSections((previousSections) => [
+      ...previousSections.filter(
+        (selected) => selected.course_id !== section.course_id,
+      ),
+      section,
+    ]);
+  }
+
+  function removeSection(section: Section) {
+    setSelectedSections((previousSections) =>
+      previousSections.filter(
+        (selected) => selected.class_number !== section.class_number,
+      ),
+    );
+  }
+
   function removeSelectedCourse(course: Course) {
     setSelectedCourses((previousCourses) =>
       previousCourses.filter(
         (selectedCourse) => selectedCourse.course_id !== course.course_id,
+      ),
+    );
+
+    setSelectedSections((previousSections) =>
+      previousSections.filter(
+        (section) => section.course_id !== course.course_id,
       ),
     );
   }
@@ -103,13 +127,19 @@ export default function Scheduler() {
           className="max-h-[calc(100vh-12rem)] flex-1 overflow-y-auto pr-2"
           courses={courses}
           selectedCourses={selectedCourses}
+          selectedSections={selectedSections}
           expandedCourseIds={expandedCourseIds}
           addCourse={addCourse}
           removeCourse={removeSelectedCourse}
+          selectSection={selectSection}
+          removeSection={removeSection}
           dropdownCourse={toggleCourseDropdown}
         />
 
-        <ScheduleCalendar className="flex-2" selectedSections={[]} />
+        <ScheduleCalendar
+          className="flex-2"
+          selectedSections={selectedSections}
+        />
       </div>
     </main>
   );
