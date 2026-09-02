@@ -43,3 +43,13 @@ export type Course = {
 export type CourseWithSections = Course & {
   sections: Section[];
 };
+
+export type PositionedEvent = {
+  section: Section;
+  meeting: Meeting;
+  meetingIndex: number;
+  start: number;
+  end: number;
+  lane: number;
+  laneCount: number;
+};

@@ -7,3 +7,8 @@ export function to12Hour(time: string): string {
 
   return `${hour12}:${minutes} ${period}`;
 }
+
+export function timeToMinutes(time: string) {
+  const [hours, minutes] = time.split(":", 2);
+  return Number(hours) * 60 + Number(minutes);
+}

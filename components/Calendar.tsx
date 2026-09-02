@@ -1,5 +1,6 @@
-import { Section } from "@/lib/types";
+import { Section, PositionedEvent } from "@/lib/types";
 import { to12Hour } from "@/lib/time";
+import { timeToMinutes } from "@/lib/time";
 
 type ScheduleCalendarProps = {
   className?: string;
@@ -35,11 +36,6 @@ export default function ScheduleCalendar({
   const START_HOUR = 8;
   const PIXELS_PER_HOUR = 72;
 
-  function timeToMinutes(time: string) {
-    const [hours, minutes] = time.split(":", 2);
-    return Number(hours) * 60 + Number(minutes);
-  }
-
   function getMeetingStyle(startTime: string, endTime: string) {
     const start = timeToMinutes(startTime);
     const end = timeToMinutes(endTime);
@@ -49,6 +45,64 @@ export default function ScheduleCalendar({
       top: ((start - calendarStart) / 60) * PIXELS_PER_HOUR,
       height: ((end - start) / 60) * PIXELS_PER_HOUR,
     };
+  }
+
+  function getDayEvents(
+    dayCode: string,
+    sections: Section[],
+  ): PositionedEvent[] {
+    const events = sections
+      .flatMap((section) =>
+        section.meetings.flatMap((meeting, meetingIndex) => {
+          if (
+            !meeting.days.includes(dayCode) ||
+            !meeting.start_time ||
+            !meeting.end_time
+          ) {
+            return [];
+          }
+
+          return [
+            {
+              section,
+              meeting,
+              meetingIndex,
+              start: timeToMinutes(meeting.start_time),
+              end: timeToMinutes(meeting.end_time),
+              lane: 0,
+              laneCount: 1,
+            },
+          ];
+        }),
+      )
+      .sort((a, b) => a.start - b.start || a.end - b.end);
+
+    const groups: PositionedEvent[][] = [];
+    let currentGroup: PositionedEvent[] = [];
+    let groupEnd = -Infinity;
+
+    for (const event of events) {
+      if (currentGroup.length > 0 && event.start >= groupEnd) {
+        groups.push(currentGroup);
+        currentGroup = [];
+        groupEnd = -Infinity;
+      }
+
+      currentGroup.push(event);
+      groupEnd = Math.max(groupEnd, event.end);
+    }
+
+    if (currentGroup.length > 0) {
+      groups.push(currentGroup);
+    }
+
+    return groups.flatMap((group) => {
+      for (const [index, event] of group.entries()) {
+        event.lane = index;
+        event.laneCount = group.length;
+      }
+      return group;
+    });
   }
 
   return (
@@ -94,46 +148,43 @@ export default function ScheduleCalendar({
                 />
               ))}
 
-              {selectedSections.flatMap((section) =>
-                section.meetings.flatMap((meeting, idx) => {
-                  if (
-                    !meeting.start_time ||
-                    !meeting.end_time ||
-                    !meeting.days.includes(day.code)
-                  ) {
-                    return [];
-                  }
+              {getDayEvents(day.code, selectedSections).map((event) => {
+                const { top, height } = getMeetingStyle(
+                  event.meeting.start_time!,
+                  event.meeting.end_time!,
+                );
 
-                  const { top, height } = getMeetingStyle(
-                    meeting.start_time,
-                    meeting.end_time,
-                  );
+                const leftPercent = (event.lane / event.laneCount) * 100;
+                const widthPercent = 100 / event.laneCount;
 
-                  return (
-                    <div
-                      key={`${section.class_number}-${idx}-${day.code}`}
-                      className="absolute inset-x-1 rounded bg-pink-500"
-                      style={{
-                        top: `${top}px`,
-                        height: `${height}px`,
-                      }}
-                    >
-                      <h3 className="text-xs">
-                        {section.subject} {section.course_number}
-                      </h3>
-                      <p className="text-xs">
-                        {meeting.building} {meeting.room}
-                      </p>
-                      <p className="text-xs">
-                        {meeting.start_time && meeting.end_time
-                          ? `${to12Hour(meeting.start_time)}–${to12Hour(meeting.end_time)}`
-                          : "TBA"}
-                      </p>
-                      <p className="text-xs">{section?.instructors[0].name}</p>
-                    </div>
-                  );
-                }),
-              )}
+                return (
+                  <div
+                    key={`${event.section.class_number}-${event.meetingIndex}-${day.code}`}
+                    className="absolute overflow-hidden rounded bg-pink-500 p-2"
+                    style={{
+                      top: `${top}px`,
+                      height: `${height}px`,
+                      left: `calc(${leftPercent}% + 2px)`,
+                      width: `calc(${widthPercent}% - 4px)`,
+                    }}
+                  >
+                    <h3 className="truncate text-xs font-semibold">
+                      {event.section.subject} {event.section.course_number}
+                    </h3>
+                    <p className="truncate text-xs">
+                      {event.meeting.building} {event.meeting.room}
+                    </p>
+                    <p className="truncate text-xs">
+                      {event.meeting.start_time && event.meeting.end_time
+                        ? `${to12Hour(event.meeting.start_time)}–${to12Hour(event.meeting.end_time)}`
+                        : "TBA"}
+                    </p>
+                    <p className="truncate text-xs">
+                      {event.section.instructors[0]?.name}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
