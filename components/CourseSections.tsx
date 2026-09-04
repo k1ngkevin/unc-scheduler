@@ -15,7 +15,7 @@ export default function CourseSections({
   selectSection,
   removeSection,
 }: CourseSectionsProps) {
-  function isSectionSelected(section: Section): Boolean {
+  function isSectionSelected(section: Section): boolean {
     return selectedSections.some(
       (selected) => selected.class_number === section.class_number,
     );
@@ -31,7 +31,10 @@ export default function CourseSections({
           onClick={() => removeSection(section)}
         >
           <div className="flex justify-between">
-            <p className="font-medium text-white">Section {section.section}</p>
+            <p className="font-medium text-white">
+              Section {section.section}{" "}
+              {section.component === "REC" ? "(Recitation)" : ""}
+            </p>
             <XMarkIcon className="size-5" />
           </div>
           <div className="flex justify-between">
@@ -61,7 +64,10 @@ export default function CourseSections({
           onClick={() => selectSection(section)}
         >
           <div className="flex justify-between">
-            <p className="font-medium text-white">Section {section.section}</p>
+            <p className="font-medium text-white">
+              Section {section.section}{" "}
+              {section.component === "REC" ? "(Recitation)" : ""}
+            </p>
             <PlusIcon className="size-5" />
           </div>
           <div className="flex justify-between">

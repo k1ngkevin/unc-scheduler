@@ -78,7 +78,9 @@ export default function Scheduler() {
   function selectSection(section: Section) {
     setSelectedSections((previousSections) => [
       ...previousSections.filter(
-        (selected) => selected.course_id !== section.course_id,
+        (selected) =>
+          selected.course_id !== section.course_id ||
+          selected.component !== section.component,
       ),
       section,
     ]);
