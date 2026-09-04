@@ -14,6 +14,7 @@ export default function Scheduler() {
   const [expandedCourseIds, setExpandedCourseIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [storageLoaded, setStorageLoaded] = useState<boolean>(false);
 
   useEffect(() => {
     async function fetchCourseData() {
@@ -36,6 +37,51 @@ export default function Scheduler() {
     }
     fetchCourseData();
   }, []);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("schedule");
+
+      if (saved) {
+        const data = JSON.parse(saved);
+
+        if (Array.isArray(data?.selectedCourses)) {
+          setSelectedCourses(data.selectedCourses);
+        }
+
+        if (Array.isArray(data?.selectedSections)) {
+          setSelectedSections(data.selectedSections);
+        }
+
+        if (Array.isArray(data?.expandedCourseIds)) {
+          setExpandedCourseIds(new Set(data.expandedCourseIds));
+        }
+      }
+    } catch (error) {
+      console.error("failed to load schedule from localStorage");
+    } finally {
+      setStorageLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!storageLoaded) {
+      return;
+    }
+
+    try {
+      localStorage.setItem(
+        "schedule",
+        JSON.stringify({
+          selectedCourses,
+          selectedSections,
+          expandedCourseIds,
+        }),
+      );
+    } catch {
+      console.error("failed to save to localStorage");
+    }
+  }, [selectedCourses, selectedSections, expandedCourseIds, storageLoaded]);
 
   const courses = useMemo<Course[]>(() => {
     const uniqueCourses = new Map<string, Course>();
