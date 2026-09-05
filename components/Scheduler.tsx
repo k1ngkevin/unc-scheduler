@@ -1,11 +1,24 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Course, CourseWithSections, Section } from "@/lib/types";
 import CourseSearch from "./CourseSearch";
 import ScheduleCalendar from "./Calendar";
 
+const MapView = dynamic(() => import("./MapView"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[36rem] flex-1 items-center justify-center rounded-lg bg-zinc-900 text-zinc-400 lg:h-full">
+      Loading map…
+    </div>
+  ),
+});
+
+type ViewMode = "calendar" | "map";
+
 export default function Scheduler() {
+  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [allSections, setAllSections] = useState<Section[]>([]);
   const [selectedCourses, setSelectedCourses] = useState<CourseWithSections[]>(
     [],
@@ -169,26 +182,75 @@ export default function Scheduler() {
   }
 
   return (
-    <main className="mt-4">
-      <div className="flex flex-col gap-6 lg:h-[calc(100vh-8.5rem)] lg:min-h-[36rem] lg:flex-row">
-        <CourseSearch
-          className="max-h-[36rem] w-full overflow-y-auto pr-2 lg:h-full lg:max-h-none lg:w-[30%] lg:min-w-80 lg:shrink-0"
-          courses={courses}
-          selectedCourses={selectedCourses}
-          selectedSections={selectedSections}
-          expandedCourseIds={expandedCourseIds}
-          addCourse={addCourse}
-          removeCourse={removeSelectedCourse}
-          selectSection={selectSection}
-          removeSection={removeSection}
-          dropdownCourse={toggleCourseDropdown}
-        />
+    <div className="flex min-h-screen flex-col font-sans">
+      <header className="sticky top-0 z-[1100] border-b border-zinc-800 bg-[#101010]/95 backdrop-blur">
+        <nav
+          className="flex h-16 items-center justify-between px-6 sm:px-10"
+          aria-label="Main navigation"
+        >
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+            UNC Scheduler
+          </h1>
 
-        <ScheduleCalendar
-          className="h-[36rem] min-w-0 flex-1 lg:h-full"
-          selectedSections={selectedSections}
-        />
-      </div>
-    </main>
+          <div
+            className="inline-flex rounded-lg bg-zinc-900 p-1"
+            role="group"
+            aria-label="Schedule view"
+          >
+            <button
+              type="button"
+              onClick={() => setViewMode("calendar")}
+              aria-pressed={viewMode === "calendar"}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                viewMode === "calendar"
+                  ? "bg-pink-500 text-white"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              Calendar
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("map")}
+              aria-pressed={viewMode === "map"}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                viewMode === "map"
+                  ? "bg-pink-500 text-white"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              Map
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      <main className="flex-1 px-6 py-6 sm:px-10">
+        <div className="flex flex-col gap-6 lg:h-[calc(100vh-7rem)] lg:min-h-[36rem] lg:flex-row">
+          {viewMode === "calendar" ? (
+            <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row">
+              <CourseSearch
+                className="max-h-[36rem] w-full overflow-y-auto pr-2 lg:h-full lg:max-h-none lg:w-[30%] lg:min-w-80 lg:shrink-0"
+                courses={courses}
+                selectedCourses={selectedCourses}
+                selectedSections={selectedSections}
+                expandedCourseIds={expandedCourseIds}
+                addCourse={addCourse}
+                removeCourse={removeSelectedCourse}
+                selectSection={selectSection}
+                removeSection={removeSection}
+                dropdownCourse={toggleCourseDropdown}
+              />
+              <ScheduleCalendar
+                className="h-[36rem] min-w-0 flex-1 lg:h-full"
+                selectedSections={selectedSections}
+              />
+            </div>
+          ) : (
+            <MapView className="h-[36rem] min-w-0 flex-1 lg:h-full" />
+          )}
+        </div>
+      </main>
+    </div>
   );
 }
