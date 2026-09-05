@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Course, CourseWithSections, Section } from "@/lib/types";
+import { Course, CourseWithSections, Section, Building } from "@/lib/types";
 import CourseSearch from "./CourseSearch";
 import ScheduleCalendar from "./Calendar";
 
@@ -28,6 +28,9 @@ export default function Scheduler() {
     () => new Set(),
   );
   const [storageLoaded, setStorageLoaded] = useState<boolean>(false);
+  const [buildingCodeCoords, setBuildingCodeCoords] = useState<
+    Record<string, Building>
+  >({});
 
   useEffect(() => {
     async function fetchCourseData() {
@@ -49,6 +52,27 @@ export default function Scheduler() {
       }
     }
     fetchCourseData();
+  }, []);
+
+  useEffect(() => {
+    async function fetchBuildingCoords() {
+      const file_name = "building_code_coords.json";
+      const supabase_id = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID;
+      const api_url = `https://${supabase_id}.supabase.co/storage/v1/object/public/course-data/scraped_data/${file_name}`;
+      try {
+        const response = await fetch(api_url);
+
+        if (!response.ok) {
+          throw new Error(`response status: ${response.status}`);
+        }
+
+        const result: Record<string, Building> = await response.json();
+        setBuildingCodeCoords(result);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchBuildingCoords();
   }, []);
 
   useEffect(() => {
@@ -247,7 +271,11 @@ export default function Scheduler() {
               />
             </div>
           ) : (
-            <MapView className="h-[36rem] min-w-0 flex-1 lg:h-full" />
+            <MapView
+              className="h-[36rem] min-w-0 flex-1 lg:h-full"
+              selectedSections={selectedSections}
+              buildingCoords={buildingCodeCoords}
+            />
           )}
         </div>
       </main>

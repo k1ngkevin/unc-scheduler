@@ -4,6 +4,7 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { Building, Section } from "@/lib/types";
 
 function imageUrl(image: string | { src: string }) {
   return typeof image === "string" ? image : image.src;
@@ -21,9 +22,25 @@ const pinIcon = icon({
 
 type MapViewProps = {
   className?: string;
+  selectedSections: Section[];
+  buildingCoords: Record<string, Building>;
 };
 
-export default function MapView({ className }: MapViewProps) {
+export default function MapView({
+  className,
+  selectedSections,
+  buildingCoords,
+}: MapViewProps) {
+  const buildingCodes = [
+    ...new Set(
+      selectedSections.flatMap((section) =>
+        section.meetings.flatMap((meeting) =>
+          meeting.building_code ? [meeting.building_code] : [],
+        ),
+      ),
+    ),
+  ];
+
   return (
     <div className={`overflow-hidden rounded-lg ${className ?? ""}`}>
       <MapContainer
@@ -37,11 +54,20 @@ export default function MapView({ className }: MapViewProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Marker icon={pinIcon} position={[35.90758, -79.04958]}>
-          <Popup>
-            A pretty CSS3 popup. <br /> Easily customizable.
-          </Popup>
-        </Marker>
+        {buildingCodes.map((code) => {
+          const building = buildingCoords[code];
+          if (!building) return null;
+
+          return (
+            <Marker
+              key={code}
+              icon={pinIcon}
+              position={[building.lat, building.long]}
+            >
+              <Popup>{building.name}</Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );

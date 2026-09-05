@@ -53,3 +53,9 @@ export type PositionedEvent = {
   lane: number;
   laneCount: number;
 };
+
+export type Building = {
+  name: string;
+  lat: number;
+  long: number;
+};
