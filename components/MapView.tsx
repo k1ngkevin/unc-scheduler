@@ -3,7 +3,7 @@ import { icon } from "leaflet";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
 import { Building, Section } from "@/lib/types";
 
 function imageUrl(image: string | { src: string }) {
@@ -31,16 +31,6 @@ export default function MapView({
   selectedSections,
   buildingCoords,
 }: MapViewProps) {
-  const buildingCodes = [
-    ...new Set(
-      selectedSections.flatMap((section) =>
-        section.meetings.flatMap((meeting) =>
-          meeting.building_code ? [meeting.building_code] : [],
-        ),
-      ),
-    ),
-  ];
-
   return (
     <div className={`overflow-hidden rounded-lg ${className ?? ""}`}>
       <MapContainer
@@ -54,20 +44,36 @@ export default function MapView({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {buildingCodes.map((code) => {
-          const building = buildingCoords[code];
-          if (!building) return null;
 
-          return (
-            <Marker
-              key={code}
-              icon={pinIcon}
-              position={[building.lat, building.long]}
-            >
-              <Popup>{building.name}</Popup>
-            </Marker>
-          );
-        })}
+        {selectedSections.map((section) =>
+          section.meetings.map((meeting) => {
+            const code = meeting.building_code ?? "";
+            const building = buildingCoords[code];
+            if (
+              !building ||
+              !Number.isFinite(building.lat) ||
+              !Number.isFinite(building.long)
+            )
+              return null;
+
+            return (
+              <Marker
+                key={code}
+                icon={pinIcon}
+                position={[building.lat, building.long]}
+              >
+                <Tooltip
+                  permanent
+                  direction="right"
+                  offset={[12, 0]}
+                  opacity={1}
+                >
+                  {`${section.subject} ${section.course_number} (${section.section})`}
+                </Tooltip>
+              </Marker>
+            );
+          }),
+        )}
       </MapContainer>
     </div>
   );
