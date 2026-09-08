@@ -34,7 +34,7 @@ export default function ScheduleCalendar({
     { label: "Fri", code: "Fr" },
   ];
   const START_HOUR = 8;
-  const PIXELS_PER_HOUR = 72;
+  const PIXELS_PER_HOUR = 74;
 
   function getMeetingStyle(startTime: string, endTime: string) {
     const start = timeToMinutes(startTime);
@@ -160,7 +160,7 @@ export default function ScheduleCalendar({
                 return (
                   <div
                     key={`${event.section.class_number}-${event.meetingIndex}-${day.code}`}
-                    className="absolute overflow-hidden rounded bg-pink-500 p-2"
+                    className="absolute overflow-hidden rounded bg-pink-500 p-1"
                     style={{
                       top: `${top}px`,
                       height: `${height}px`,
@@ -171,16 +171,17 @@ export default function ScheduleCalendar({
                     <h3 className="truncate text-xs font-semibold">
                       {event.section.subject} {event.section.course_number}
                     </h3>
-                    <p className="truncate text-xs">
+                    <p className="truncate text-xs leading-[12px]">
                       {event.meeting.building} {event.meeting.room}
                     </p>
-                    <p className="truncate text-xs">
+                    <p className="truncate text-xs leading-[12px]">
                       {event.meeting.start_time && event.meeting.end_time
                         ? `${to12Hour(event.meeting.start_time)}–${to12Hour(event.meeting.end_time)}`
                         : "TBA"}
                     </p>
-                    <p className="truncate text-xs">
-                      {event.section.instructors[0]?.name}
+                    <p className="truncate text-xs leading-[12px]">
+                      {event.section.instructors[0]?.name?.trim() ||
+                        "not found"}
                     </p>
                   </div>
                 );
