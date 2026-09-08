@@ -106,44 +106,41 @@ export default function ScheduleCalendar({
   }
 
   return (
-    <div className={`w-full overflow-auto ${className ?? ""}`}>
+    <div
+      className={`w-full overflow-auto rounded-sm border border-line bg-surface ${className ?? ""}`}
+    >
       <div className="min-w-[800px]">
-        <div className="grid grid-cols-[70px_repeat(5,1fr)]">
-          <div />
+        <div className="sticky top-0 z-10 grid grid-cols-[56px_repeat(5,1fr)] bg-surface">
+          <div className="border-b border-line" />
           {days.map((day) => (
             <div
               key={day.code}
-              className="border-b border-zinc-700 p-3 text-center font-semibold"
+              className="border-b border-line px-2 py-3 text-center text-xs font-medium text-muted"
             >
               {day.label}
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-[70px_repeat(5,1fr)]">
+        <div className="grid grid-cols-[56px_repeat(5,1fr)]">
           <div>
             {times.map((time) => (
               <div
                 key={time}
-                className="relative text-sm text-zinc-400"
+                className="relative text-[11px] text-muted"
                 style={{ height: `${PIXELS_PER_HOUR}px` }}
               >
-                <span className="absolute right-2 top-0 -translate-y-1/2">
-                  {time}
-                </span>
+                <span className="absolute right-2 top-1">{time}</span>
               </div>
             ))}
           </div>
 
           {days.map((day) => (
-            <div
-              key={day.code}
-              className="relative border-l border-zinc-700 last:border-r"
-            >
+            <div key={day.code} className="relative border-l border-line">
               {times.map((time) => (
                 <div
                   key={time}
-                  className="border-b border-zinc-700"
+                  className="border-b border-line/60"
                   style={{ height: `${PIXELS_PER_HOUR}px` }}
                 />
               ))}
@@ -160,7 +157,7 @@ export default function ScheduleCalendar({
                 return (
                   <div
                     key={`${event.section.class_number}-${event.meetingIndex}-${day.code}`}
-                    className="absolute overflow-hidden rounded bg-pink-500 p-1"
+                    className="group absolute"
                     style={{
                       top: `${top}px`,
                       height: `${height}px`,
@@ -168,21 +165,25 @@ export default function ScheduleCalendar({
                       width: `calc(${widthPercent}% - 4px)`,
                     }}
                   >
-                    <h3 className="truncate text-xs font-semibold">
-                      {event.section.subject} {event.section.course_number}
-                    </h3>
-                    <p className="truncate text-xs leading-[12px]">
-                      {event.meeting.building} {event.meeting.room}
-                    </p>
-                    <p className="truncate text-xs leading-[12px]">
-                      {event.meeting.start_time && event.meeting.end_time
-                        ? `${to12Hour(event.meeting.start_time)}–${to12Hour(event.meeting.end_time)}`
-                        : "TBA"}
-                    </p>
-                    <p className="truncate text-xs leading-[12px]">
-                      {event.section.instructors[0]?.name?.trim() ||
-                        "not found"}
-                    </p>
+                    <div className="h-full overflow-hidden rounded-sm border-l-[3px] border-carolina bg-carolina-light p-1 text-ink">
+                      <h3 className="truncate text-xs font-semibold">
+                        {event.section.subject} {event.section.course_number}
+                      </h3>
+                      <p className="truncate text-xs leading-[12px]">
+                        {event.meeting.building} {event.meeting.room}
+                      </p>
+                      <p className="truncate text-xs leading-[12px]">
+                        {event.meeting.start_time && event.meeting.end_time
+                          ? `${to12Hour(event.meeting.start_time)}–${to12Hour(event.meeting.end_time)}`
+                          : "TBA"}
+                      </p>
+                      <p className="truncate text-xs leading-[12px]">
+                        {event.section.instructors[0]?.name?.trim() ||
+                          "not found"}
+                      </p>
+                    </div>
+
+                    <div> </div>
                   </div>
                 );
               })}

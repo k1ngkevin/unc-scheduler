@@ -9,7 +9,7 @@ import ScheduleCalendar from "./Calendar";
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-[36rem] flex-1 items-center justify-center rounded-lg bg-zinc-900 text-zinc-400 lg:h-full">
+    <div className="flex h-[36rem] flex-1 items-center justify-center rounded-sm border border-line bg-surface text-sm text-muted lg:h-full">
       Loading map…
     </div>
   ),
@@ -207,17 +207,17 @@ export default function Scheduler() {
 
   return (
     <div className="flex min-h-screen flex-col font-sans">
-      <header className="sticky top-0 z-[1100] border-b border-zinc-800 bg-[#101010]/95 backdrop-blur">
+      <header className="sticky top-0 z-[1100] border-b border-line bg-surface">
         <nav
-          className="flex h-16 items-center justify-between px-6 sm:px-10"
+          className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6"
           aria-label="Main navigation"
         >
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
-            UNC Scheduler
+          <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
+            <span className="text-carolina-strong">UNC</span> Scheduler
           </h1>
 
           <div
-            className="inline-flex rounded-lg bg-zinc-900 p-1"
+            className="inline-flex gap-1 rounded-sm bg-surface-muted p-1"
             role="group"
             aria-label="Schedule view"
           >
@@ -225,10 +225,10 @@ export default function Scheduler() {
               type="button"
               onClick={() => setViewMode("calendar")}
               aria-pressed={viewMode === "calendar"}
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carolina-strong sm:px-4 sm:text-sm ${
                 viewMode === "calendar"
-                  ? "bg-pink-500 text-white"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-carolina text-on-carolina"
+                  : "text-muted hover:bg-surface hover:text-ink"
               }`}
             >
               Calendar
@@ -237,10 +237,10 @@ export default function Scheduler() {
               type="button"
               onClick={() => setViewMode("map")}
               aria-pressed={viewMode === "map"}
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carolina-strong sm:px-4 sm:text-sm ${
                 viewMode === "map"
-                  ? "bg-pink-500 text-white"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-carolina text-on-carolina"
+                  : "text-muted hover:bg-surface hover:text-ink"
               }`}
             >
               Map
@@ -249,7 +249,7 @@ export default function Scheduler() {
         </nav>
       </header>
 
-      <main className="flex-1 px-6 py-6 sm:px-10">
+      <main className="flex-1 px-4 py-6 sm:px-6">
         <div className="flex flex-col lg:h-[calc(100vh-7rem)] lg:min-h-[36rem] lg:flex-row">
           {viewMode === "calendar" ? (
             <div className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row">

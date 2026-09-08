@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import CourseCard from "./CourseCard";
 import CourseSections from "./CourseSections";
 import { Course, CourseWithSections, Section } from "@/lib/types";
@@ -65,14 +66,67 @@ export default function CourseSearch({
 
   return (
     <section className={className ?? ""}>
-      <div className="mt-3 mb-3 grid gap-3">
+      <div>
+        <label
+          htmlFor="course-search"
+          className="mb-2 block text-xs font-semibold text-ink"
+        >
+          Find a course
+        </label>
+        <div className="relative">
+          <MagnifyingGlassIcon
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+          />
+          <input
+            id="course-search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+            }}
+            placeholder="COMP or COMP 110"
+            autoComplete="off"
+            aria-describedby="course-search-help"
+            className="w-full min-w-0 rounded-sm border border-line bg-surface py-2.5 pl-9 pr-3 text-xs text-ink outline-none transition-colors placeholder:text-muted focus:border-carolina focus:ring-2 focus:ring-carolina/20"
+          />
+        </div>
+        <p id="course-search-help" className="mt-2 text-[11px] leading-relaxed text-muted">
+          Enter a subject, with an optional course number.
+        </p>
+      </div>
+
+      {query.trim() && (
+        <div className="mt-3 max-h-72 overflow-y-auto">
+          <div className="grid gap-2">
+            {filteredCourses.map((course) => (
+              <CourseCard
+                key={course.course_id}
+                subject={course.subject}
+                number={course.course_number}
+                title={course.title}
+                variant="notSelected"
+                onClick={() => addCourse(course)}
+              />
+            ))}
+          </div>
+          {filteredCourses.length === 0 && (
+            <p className="py-2 text-xs text-muted">No matching courses to add.</p>
+          )}
+        </div>
+      )}
+
+      <div className="mb-3 mt-6 flex items-center justify-between border-t border-line pt-4">
+        <h2 className="text-xs font-semibold text-ink">Your courses</h2>
+        <span className="text-xs tabular-nums text-muted">{selectedCourses.length}</span>
+      </div>
+      <div className="grid gap-2">
         {selectedCourses.map((course) => (
           <div key={course.course_id}>
             <CourseCard
               subject={course.subject}
               number={course.course_number}
               title={course.title}
-              variant={"selected"}
+              variant="selected"
               expanded={expandedCourseIds.has(course.course_id)}
               removeCourse={() => removeCourse(course)}
               onClick={() => dropdownCourse(course.course_id)}
@@ -88,44 +142,11 @@ export default function CourseSearch({
           </div>
         ))}
       </div>
-
-      <div className="rounded-sm border border-white/10 bg-zinc-900 p-4 shadow-xl shadow-black/20 sm:p-5">
-        <label
-          htmlFor="course-search"
-          className="mb-2 block text-xs font-medium text-zinc-200"
-        >
-          Search for a course
-        </label>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <input
-            id="course-search"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-            }}
-            placeholder="COMP or COMP 110"
-            className="min-w-0 flex-1 rounded-sm border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-zinc-400 focus:ring-2 focus:ring-white/10"
-          />
-        </div>
-        <p className="mt-2 text-[11px] text-zinc-500">
-          Enter a subject, with an optional course number.
+      {selectedCourses.length === 0 && (
+        <p className="text-xs leading-relaxed text-muted">
+          Add a course, then choose a section to build your week.
         </p>
-      </div>
-
-      <div className="mt-3 grid gap-3">
-        {filteredCourses.map((course) => (
-          <div key={course.course_id}>
-            <CourseCard
-              subject={course.subject}
-              number={course.course_number}
-              title={course.title}
-              variant={"notSelected"}
-              removeCourse={() => removeCourse(course)}
-              onClick={() => addCourse(course)}
-            />
-          </div>
-        ))}
-      </div>
+      )}
     </section>
   );
 }
