@@ -54,16 +54,16 @@ export default function CourseCard({
     <button
       type="button"
       onClick={onClick}
-      className="group w-full text-left rounded-xl border border-white/10 bg-zinc-800 p-5 shadow-md shadow-black/10 transition hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-700 hover:shadow-lg hover:shadow-black/20"
+      className="group w-full text-left rounded-sm border border-white/10 bg-zinc-800 p-5 shadow-md shadow-black/10 transition hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-700 hover:shadow-lg hover:shadow-black/20"
     >
       <div className="flex items-center justify-between">
-        <h2 className="font-mono text-sm font-semibold tracking-wide text-zinc-300">
+        <h2 className="font-mono text-xs font-semibold tracking-wide text-zinc-300">
           {subject} {number}
         </h2>
         {getIcons(variant)}
       </div>
 
-      <p className="mt-2 text-base font-medium leading-snug text-white">
+      <p className="mt-2 text-sm font-medium leading-snug text-white">
         {title}
       </p>
     </button>

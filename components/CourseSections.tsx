@@ -27,23 +27,23 @@ export default function CourseSections({
         <button
           type="button"
           key={section.class_number}
-          className="rounded-lg border p-3 text-left border-blue-400 bg-blue-500/20"
+          className="rounded-sm border p-3 text-left border-blue-400 bg-blue-500/20"
           onClick={() => removeSection(section)}
         >
           <div className="flex justify-between">
-            <p className="font-medium text-white">
+            <p className="text-sm font-medium text-white">
               Section {section.section}{" "}
               {section.component === "REC" ? "(Recitation)" : ""}
             </p>
             <XMarkIcon className="size-5" />
           </div>
           <div className="flex justify-between">
-            <p className="text-sm text-zinc-400">
+            <p className="text-xs text-zinc-400">
               {section.available_seats} seats available
             </p>
             {section.meetings.map((meeting) => (
               <p
-                className="text-sm text-zinc-400"
+                className="text-xs text-zinc-400"
                 key={`${meeting.start_time}-${meeting.end_time}-${meeting.room}`}
               >
                 {meeting.days.join(", ")}{" "}
@@ -60,23 +60,23 @@ export default function CourseSections({
         <button
           type="button"
           key={section.class_number}
-          className="rounded-lg border p-3 text-left border-white/10 bg-zinc-900 hover:bg-zinc-800"
+          className="rounded-sm border p-3 text-left border-white/10 bg-zinc-900 hover:bg-zinc-800"
           onClick={() => selectSection(section)}
         >
           <div className="flex justify-between">
-            <p className="font-medium text-white">
+            <p className="text-sm font-medium text-white">
               Section {section.section}{" "}
               {section.component === "REC" ? "(Recitation)" : ""}
             </p>
             <PlusIcon className="size-5" />
           </div>
           <div className="flex justify-between">
-            <p className="text-sm text-zinc-400">
+            <p className="text-xs text-zinc-400">
               {section.available_seats} seats available
             </p>
             {section.meetings.map((meeting) => (
               <p
-                className="text-sm text-zinc-400"
+                className="text-xs text-zinc-400"
                 key={`${meeting.start_time}-${meeting.end_time}-${meeting.room}`}
               >
                 {meeting.days.join(", ")}{" "}
@@ -92,7 +92,7 @@ export default function CourseSections({
   }
 
   return (
-    <div className="mt-2 grid gap-2 pl-4">
+    <div className="mt-2 grid pl-4">
       {sections.map((section) => getSectionStyle(section))}
     </div>
   );

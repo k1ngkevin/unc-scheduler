@@ -250,11 +250,11 @@ export default function Scheduler() {
       </header>
 
       <main className="flex-1 px-6 py-6 sm:px-10">
-        <div className="flex flex-col gap-6 lg:h-[calc(100vh-7rem)] lg:min-h-[36rem] lg:flex-row">
+        <div className="flex flex-col lg:h-[calc(100vh-7rem)] lg:min-h-[36rem] lg:flex-row">
           {viewMode === "calendar" ? (
-            <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row">
+            <div className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row">
               <CourseSearch
-                className="max-h-[36rem] w-full overflow-y-auto pr-2 lg:h-full lg:max-h-none lg:w-[30%] lg:min-w-80 lg:shrink-0"
+                className="max-h-[36rem] w-full overflow-y-auto pr-2 lg:h-full lg:max-h-none lg:w-[24%] lg:min-w-72 lg:shrink-0"
                 courses={courses}
                 selectedCourses={selectedCourses}
                 selectedSections={selectedSections}

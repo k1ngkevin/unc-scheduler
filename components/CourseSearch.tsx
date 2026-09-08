@@ -89,10 +89,10 @@ export default function CourseSearch({
         ))}
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-zinc-900 p-4 shadow-xl shadow-black/20 sm:p-5">
+      <div className="rounded-sm border border-white/10 bg-zinc-900 p-4 shadow-xl shadow-black/20 sm:p-5">
         <label
           htmlFor="course-search"
-          className="mb-2 block text-sm font-medium text-zinc-200"
+          className="mb-2 block text-xs font-medium text-zinc-200"
         >
           Search for a course
         </label>
@@ -104,10 +104,10 @@ export default function CourseSearch({
               setQuery(e.target.value);
             }}
             placeholder="COMP or COMP 110"
-            className="min-w-0 flex-1 rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white outline-none transition placeholder:text-zinc-500 focus:border-zinc-400 focus:ring-2 focus:ring-white/10"
+            className="min-w-0 flex-1 rounded-sm border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-zinc-400 focus:ring-2 focus:ring-white/10"
           />
         </div>
-        <p className="mt-2 text-xs text-zinc-500">
+        <p className="mt-2 text-[11px] text-zinc-500">
           Enter a subject, with an optional course number.
         </p>
       </div>

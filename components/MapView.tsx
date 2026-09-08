@@ -32,7 +32,7 @@ export default function MapView({
   buildingCoords,
 }: MapViewProps) {
   return (
-    <div className={`overflow-hidden rounded-lg ${className ?? ""}`}>
+    <div className={`overflow-hidden rounded-md ${className ?? ""}`}>
       <MapContainer
         className="h-full w-full"
         center={[35.90758, -79.04958]}
