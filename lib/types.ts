@@ -28,6 +28,8 @@ export type Section = {
   capacity: number;
   enrolled: number;
   available_seats: number;
+  min_credits: number;
+  max_credits: number;
   instructors: Instructor[];
   meetings: Meeting[];
 };

@@ -1,6 +1,8 @@
+"use client";
+
 import { Section, PositionedEvent } from "@/lib/types";
-import { to12Hour } from "@/lib/time";
 import { timeToMinutes } from "@/lib/time";
+import CalendarBlock from "./CalendarBlock";
 
 type ScheduleCalendarProps = {
   className?: string;
@@ -36,7 +38,10 @@ export default function ScheduleCalendar({
   const START_HOUR = 8;
   const PIXELS_PER_HOUR = 74;
 
-  function getMeetingStyle(startTime: string, endTime: string) {
+  function getMeetingStyle(
+    startTime: string,
+    endTime: string,
+  ): { top: number; height: number } {
     const start = timeToMinutes(startTime);
     const end = timeToMinutes(endTime);
     const calendarStart = START_HOUR * 60;
@@ -146,45 +151,12 @@ export default function ScheduleCalendar({
               ))}
 
               {getDayEvents(day.code, selectedSections).map((event) => {
-                const { top, height } = getMeetingStyle(
-                  event.meeting.start_time!,
-                  event.meeting.end_time!,
-                );
-
-                const leftPercent = (event.lane / event.laneCount) * 100;
-                const widthPercent = 100 / event.laneCount;
-
                 return (
-                  <div
+                  <CalendarBlock
                     key={`${event.section.class_number}-${event.meetingIndex}-${day.code}`}
-                    className="group absolute"
-                    style={{
-                      top: `${top}px`,
-                      height: `${height}px`,
-                      left: `calc(${leftPercent}% + 2px)`,
-                      width: `calc(${widthPercent}% - 4px)`,
-                    }}
-                  >
-                    <div className="h-full overflow-hidden rounded-sm border-l-[3px] border-carolina bg-carolina-light p-1 text-ink">
-                      <h3 className="truncate text-xs font-semibold">
-                        {event.section.subject} {event.section.course_number}
-                      </h3>
-                      <p className="truncate text-xs leading-[12px]">
-                        {event.meeting.building} {event.meeting.room}
-                      </p>
-                      <p className="truncate text-xs leading-[12px]">
-                        {event.meeting.start_time && event.meeting.end_time
-                          ? `${to12Hour(event.meeting.start_time)}–${to12Hour(event.meeting.end_time)}`
-                          : "TBA"}
-                      </p>
-                      <p className="truncate text-xs leading-[12px]">
-                        {event.section.instructors[0]?.name?.trim() ||
-                          "not found"}
-                      </p>
-                    </div>
-
-                    <div> </div>
-                  </div>
+                    event={event}
+                    getMeetingStyle={getMeetingStyle}
+                  />
                 );
               })}
             </div>
