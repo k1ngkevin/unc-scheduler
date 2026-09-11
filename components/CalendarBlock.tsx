@@ -86,8 +86,12 @@ export default function CalendarBlock({
           <p className="truncate text-xs">
             Location: {event.meeting.building} {event.meeting.room}
           </p>
+          {}
           <p className="truncate text-xs">
-            Credits: {event.section.max_credits}
+            Credits:{" "}
+            {event.section.section_type === "REC"
+              ? "Recitation"
+              : event.section.max_credits}
           </p>
         </div>
       )}
