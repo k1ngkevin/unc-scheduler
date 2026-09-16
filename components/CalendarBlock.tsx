@@ -81,7 +81,7 @@ export default function CalendarBlock({
         >
           <p className="truncate text-xs">Course Name: {event.section.title}</p>
           <p className="truncate text-xs">
-            Instructors: {event.section.instructors[0].name}
+            Instructors: {event.section.instructors[0]?.name?.trim() || "not found"}
           </p>
           <p className="truncate text-xs">
             Location: {event.meeting.building} {event.meeting.room}
