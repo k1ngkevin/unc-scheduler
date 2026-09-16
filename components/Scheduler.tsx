@@ -272,7 +272,7 @@ export default function Scheduler() {
             </div>
           ) : (
             <MapView
-              className="h-[36rem] min-w-0 flex-1 lg:h-full"
+              className="h-[36rem] min-w-0 flex-none lg:h-full lg:flex-1"
               selectedSections={selectedSections}
               buildingCoords={buildingCodeCoords}
             />
