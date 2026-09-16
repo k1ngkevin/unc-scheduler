@@ -18,6 +18,7 @@ const MapView = dynamic(() => import("./MapView"), {
 type ViewMode = "calendar" | "map";
 
 export default function Scheduler() {
+  const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [allSections, setAllSections] = useState<Section[]>([]);
   const [selectedCourses, setSelectedCourses] = useState<CourseWithSections[]>(
@@ -254,6 +255,8 @@ export default function Scheduler() {
           {viewMode === "calendar" ? (
             <div className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row">
               <CourseSearch
+                query={query}
+                setQuery={setQuery}
                 className="max-h-[36rem] w-full overflow-y-auto pr-2 lg:h-full lg:max-h-none lg:w-[24%] lg:min-w-72 lg:shrink-0"
                 courses={courses}
                 selectedCourses={selectedCourses}

@@ -33,7 +33,9 @@ export default function CourseCard({
         onClick={onClick}
         aria-expanded={variant === "selected" ? expanded : undefined}
         aria-label={
-          variant === "notSelected" ? `Add ${subject} ${number}: ${title}` : undefined
+          variant === "notSelected"
+            ? `Add ${subject} ${number}: ${title}`
+            : undefined
         }
         className="min-w-0 flex-1 rounded-sm p-3 text-left transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-carolina focus-visible:ring-inset"
       >
@@ -42,11 +44,20 @@ export default function CourseCard({
             {subject} {number}
           </h2>
           {variant === "notSelected" ? (
-            <PlusIcon aria-hidden="true" className="size-4 shrink-0 text-carolina-strong" />
+            <PlusIcon
+              aria-hidden="true"
+              className="size-4 shrink-0 text-carolina-strong"
+            />
           ) : expanded ? (
-            <ChevronUpIcon aria-hidden="true" className="size-4 shrink-0 text-muted" />
+            <ChevronUpIcon
+              aria-hidden="true"
+              className="size-4 shrink-0 text-muted"
+            />
           ) : (
-            <ChevronDownIcon aria-hidden="true" className="size-4 shrink-0 text-muted" />
+            <ChevronDownIcon
+              aria-hidden="true"
+              className="size-4 shrink-0 text-muted"
+            />
           )}
         </div>
         <p className="mt-1 text-xs leading-relaxed text-muted">{title}</p>

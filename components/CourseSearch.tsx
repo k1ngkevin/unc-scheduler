@@ -7,6 +7,8 @@ import CourseSections from "./CourseSections";
 import { Course, CourseWithSections, Section } from "@/lib/types";
 
 type CourseSearchProps = {
+  query: string;
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
   className?: string;
   courses: Course[];
   selectedCourses: CourseWithSections[];
@@ -20,6 +22,8 @@ type CourseSearchProps = {
 };
 
 export default function CourseSearch({
+  query,
+  setQuery,
   className,
   courses,
   selectedCourses,
@@ -31,8 +35,6 @@ export default function CourseSearch({
   removeSection,
   dropdownCourse,
 }: CourseSearchProps) {
-  const [query, setQuery] = useState("");
-
   const filteredCourses = useMemo<Course[]>(() => {
     const normalizedQuery = query.trim().toUpperCase();
     if (!normalizedQuery) {
@@ -90,7 +92,10 @@ export default function CourseSearch({
             className="w-full min-w-0 rounded-sm border border-line bg-surface py-2.5 pl-9 pr-3 text-xs text-ink outline-none transition-colors placeholder:text-muted focus:border-carolina focus:ring-2 focus:ring-carolina/20"
           />
         </div>
-        <p id="course-search-help" className="mt-2 text-[11px] leading-relaxed text-muted">
+        <p
+          id="course-search-help"
+          className="mt-2 text-[11px] leading-relaxed text-muted"
+        >
           Enter a subject, with an optional course number.
         </p>
       </div>
@@ -110,14 +115,18 @@ export default function CourseSearch({
             ))}
           </div>
           {filteredCourses.length === 0 && (
-            <p className="py-2 text-xs text-muted">No matching courses to add.</p>
+            <p className="py-2 text-xs text-muted">
+              No matching courses to add.
+            </p>
           )}
         </div>
       )}
 
       <div className="mb-3 mt-6 flex items-center justify-between border-t border-line pt-4">
         <h2 className="text-xs font-semibold text-ink">Your courses</h2>
-        <span className="text-xs tabular-nums text-muted">{selectedCourses.length}</span>
+        <span className="text-xs tabular-nums text-muted">
+          {selectedCourses.length}
+        </span>
       </div>
       <div className="grid gap-2">
         {selectedCourses.map((course) => (
