@@ -125,8 +125,9 @@ export default function Scheduler() {
     const uniqueCourses = new Map<string, Course>();
 
     for (const section of allSections) {
-      if (!uniqueCourses.has(section.course_id)) {
-        uniqueCourses.set(section.course_id, {
+      const key = `${section.subject}-${section.course_id}`;
+      if (!uniqueCourses.has(key)) {
+        uniqueCourses.set(key, {
           course_id: section.course_id,
           term: section.term,
           subject: section.subject,
