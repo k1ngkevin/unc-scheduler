@@ -59,11 +59,11 @@ NEXT_PUBLIC_SUPABASE_PROJECT_ID=your_supabase_project_id
 
 The `course-data` storage bucket must be publicly readable and contain:
 
-- `scraped_data/2269.json`: an array of course sections.
+- `scraped_data/2272.json`: an array of course sections.
 - `scraped_data/building_code_coords.json`: building coordinates keyed by
   building code, with `name`, `lat`, and `long` fields.
 
-The app currently loads the hardcoded term `2269`. The data URLs are defined in
+The app currently loads the hardcoded term `2272` (spring 2027). The data URLs are defined in
 [components/Scheduler.tsx](components/Scheduler.tsx), and the expected data shapes
 are in [lib/types.ts](lib/types.ts). Do not expose a Supabase private key to the
 browser.

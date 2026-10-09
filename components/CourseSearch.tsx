@@ -125,7 +125,13 @@ export default function CourseSearch({
       <div className="mb-3 mt-6 flex items-center justify-between border-t border-line pt-4">
         <h2 className="text-xs font-semibold text-ink">Your courses</h2>
         <span className="text-xs tabular-nums text-muted">
-          {selectedCourses.length}
+          {new Set(selectedSections.map((section) => section.course_id)).size}{" "}
+          courses,{" "}
+          {selectedSections.reduce(
+            (sum, section) => sum + Number(section.max_credits),
+            0,
+          )}{" "}
+          credits
         </span>
       </div>
       <div className="grid gap-2">
@@ -153,7 +159,7 @@ export default function CourseSearch({
       </div>
       {selectedCourses.length === 0 && (
         <p className="text-xs leading-relaxed text-muted">
-          Add a course, then choose a section to build your week.
+          Add a course, then choose a section to build week.
         </p>
       )}
     </section>
