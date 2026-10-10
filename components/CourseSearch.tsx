@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { courseKey, courseListingKey } from "@/lib/courseIdentity";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import CourseCard from "./CourseCard";
 import CourseSections from "./CourseSections";
@@ -50,11 +51,11 @@ export default function CourseSearch({
     const courseNumber = input[2];
 
     const selectedIds = new Set(
-      selectedCourses.map((course) => course.course_id),
+      selectedCourses.map(courseKey),
     );
 
     return courses.filter((course) => {
-      if (selectedIds.has(course.course_id)) {
+      if (selectedIds.has(courseKey(course))) {
         return false;
       }
 
@@ -105,7 +106,7 @@ export default function CourseSearch({
           <div className="grid gap-2">
             {filteredCourses.map((course) => (
               <CourseCard
-                key={course.course_id}
+                key={courseListingKey(course)}
                 subject={course.subject}
                 number={course.course_number}
                 title={course.title}
@@ -125,7 +126,7 @@ export default function CourseSearch({
       <div className="mb-3 mt-6 flex items-center justify-between border-t border-line pt-4">
         <h2 className="text-xs font-semibold text-ink">Your courses</h2>
         <span className="text-xs tabular-nums text-muted">
-          {new Set(selectedSections.map((section) => section.course_id)).size}{" "}
+          {new Set(selectedSections.map(courseKey)).size}{" "}
           courses,{" "}
           {selectedSections.reduce(
             (sum, section) => sum + Number(section.max_credits),
@@ -136,17 +137,17 @@ export default function CourseSearch({
       </div>
       <div className="grid gap-2">
         {selectedCourses.map((course) => (
-          <div key={course.course_id}>
+          <div key={courseListingKey(course)}>
             <CourseCard
               subject={course.subject}
               number={course.course_number}
               title={course.title}
               variant="selected"
-              expanded={expandedCourseIds.has(course.course_id)}
+              expanded={expandedCourseIds.has(courseListingKey(course))}
               removeCourse={() => removeCourse(course)}
-              onClick={() => dropdownCourse(course.course_id)}
+              onClick={() => dropdownCourse(courseListingKey(course))}
             />
-            {expandedCourseIds.has(course.course_id) && (
+            {expandedCourseIds.has(courseListingKey(course)) && (
               <CourseSections
                 sections={course.sections}
                 selectedSections={selectedSections}

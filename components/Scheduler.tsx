@@ -3,6 +3,12 @@
 import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Course, CourseWithSections, Section, Building } from "@/lib/types";
+import {
+  courseKey,
+  courseListingKey,
+  sectionsForCourse,
+  restoreCourseListings,
+} from "@/lib/courseIdentity";
 import CourseSearch from "./CourseSearch";
 import ScheduleCalendar from "./Calendar";
 
@@ -83,16 +89,25 @@ export default function Scheduler() {
       if (saved) {
         const data = JSON.parse(saved);
 
-        if (Array.isArray(data?.selectedCourses)) {
-          setSelectedCourses(data.selectedCourses);
-        }
-
-        if (Array.isArray(data?.selectedSections)) {
-          setSelectedSections(data.selectedSections);
-        }
+        const restored = restoreCourseListings(
+          Array.isArray(data?.selectedCourses) ? data.selectedCourses : [],
+          Array.isArray(data?.selectedSections) ? data.selectedSections : [],
+        );
+        setSelectedCourses(restored.courses);
+        setSelectedSections(restored.sections);
 
         if (Array.isArray(data?.expandedCourseIds)) {
-          setExpandedCourseIds(new Set(data.expandedCourseIds));
+          setExpandedCourseIds(
+            new Set(
+              restored.courses
+                .filter(
+                  (course) =>
+                    data.expandedCourseIds.includes(courseListingKey(course)) ||
+                    data.expandedCourseIds.includes(course.course_id),
+                )
+                .map(courseListingKey),
+            ),
+          );
         }
       }
     } catch (error) {
@@ -113,7 +128,7 @@ export default function Scheduler() {
         JSON.stringify({
           selectedCourses,
           selectedSections,
-          expandedCourseIds,
+          expandedCourseIds: Array.from(expandedCourseIds),
         }),
       );
     } catch {
@@ -125,7 +140,7 @@ export default function Scheduler() {
     const uniqueCourses = new Map<string, Course>();
 
     for (const section of allSections) {
-      const key = `${section.subject}-${section.course_id}`;
+      const key = courseListingKey(section);
       if (!uniqueCourses.has(key)) {
         uniqueCourses.set(key, {
           course_id: section.course_id,
@@ -143,7 +158,7 @@ export default function Scheduler() {
   function addCourse(course: Course) {
     setSelectedCourses((previousCourses) => {
       const alreadySelected = previousCourses.some(
-        (selected) => selected.course_id === course.course_id,
+        (selected) => courseKey(selected) === courseKey(course),
       );
 
       if (alreadySelected) {
@@ -152,9 +167,7 @@ export default function Scheduler() {
 
       const courseWithSections: CourseWithSections = {
         ...course,
-        sections: allSections.filter(
-          (section) => section.course_id === course.course_id,
-        ),
+        sections: sectionsForCourse(course, allSections),
       };
       return [...previousCourses, courseWithSections];
     });
@@ -164,7 +177,7 @@ export default function Scheduler() {
     setSelectedSections((previousSections) => [
       ...previousSections.filter(
         (selected) =>
-          selected.course_id !== section.course_id ||
+          courseKey(selected) !== courseKey(section) ||
           selected.component !== section.component,
       ),
       section,
@@ -174,7 +187,9 @@ export default function Scheduler() {
   function removeSection(section: Section) {
     setSelectedSections((previousSections) =>
       previousSections.filter(
-        (selected) => selected.class_number !== section.class_number,
+        (selected) =>
+          selected.term !== section.term ||
+          selected.class_number !== section.class_number,
       ),
     );
   }
@@ -182,13 +197,14 @@ export default function Scheduler() {
   function removeSelectedCourse(course: Course) {
     setSelectedCourses((previousCourses) =>
       previousCourses.filter(
-        (selectedCourse) => selectedCourse.course_id !== course.course_id,
+        (selectedCourse) =>
+          courseListingKey(selectedCourse) !== courseListingKey(course),
       ),
     );
 
     setSelectedSections((previousSections) =>
       previousSections.filter(
-        (section) => section.course_id !== course.course_id,
+        (section) => courseListingKey(section) !== courseListingKey(course),
       ),
     );
   }
