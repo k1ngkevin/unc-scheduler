@@ -13,6 +13,7 @@ import CourseSearch from "./CourseSearch";
 import ScheduleCalendar from "./Calendar";
 import { Toaster, toast } from "sonner";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { format } from "timeago.js";
 
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
@@ -47,6 +48,7 @@ export default function Scheduler() {
   >({});
 
   const [selectedTerm, setSelectedTerm] = useState("2272");
+  const [lastUpdatedTime, setLastUpdatedTime] = useState("");
 
   useEffect(() => {
     async function fetchCourseData() {
@@ -60,9 +62,13 @@ export default function Scheduler() {
           throw new Error(`response status: ${response.status}`);
         }
 
-        const result: Section[] = await response.json();
+        const data = await response.json();
+        const result: Section[] = data.classes;
 
         setAllSections(result);
+
+        const dateUpdated = data.scraped_date;
+        setLastUpdatedTime(format(dateUpdated));
       } catch (error) {
         console.error(error);
         toast.error("Couldn't load courses", {
@@ -314,7 +320,7 @@ export default function Scheduler() {
         </nav>
       </header>
 
-      <main className="flex-1 px-4 py-6 sm:px-6">
+      <main className="flex-1 px-4 pt-6 pb-20 sm:px-6">
         <div className="flex flex-col lg:h-[calc(100vh-7rem)] lg:min-h-[36rem] lg:flex-row">
           {viewMode === "calendar" ? (
             <div className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row">
@@ -346,6 +352,11 @@ export default function Scheduler() {
           )}
         </div>
       </main>
+      <footer className="fixed inset-x-0 bottom-0 z-[1100] border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs text-muted sm:px-6">
+        <p role="status">
+          Course data last updated: {lastUpdatedTime || "Unavailable"}
+        </p>
+      </footer>
     </div>
   );
 }
