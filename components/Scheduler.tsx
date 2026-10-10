@@ -39,6 +39,7 @@ export default function Scheduler() {
     [],
   );
   const [selectedSections, setSelectedSections] = useState<Section[]>([]);
+  const [previewSection, setPreviewSection] = useState<Section | null>(null);
   const [expandedCourseIds, setExpandedCourseIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -205,6 +206,7 @@ export default function Scheduler() {
   }
 
   function selectSection(section: Section) {
+    setPreviewSection(null);
     setSelectedSections((previousSections) => [
       ...previousSections.filter(
         (selected) =>
@@ -216,6 +218,7 @@ export default function Scheduler() {
   }
 
   function removeSection(section: Section) {
+    setPreviewSection(null);
     setSelectedSections((previousSections) =>
       previousSections.filter(
         (selected) =>
@@ -226,6 +229,7 @@ export default function Scheduler() {
   }
 
   function removeSelectedCourse(course: Course) {
+    setPreviewSection(null);
     setSelectedCourses((previousCourses) =>
       previousCourses.filter(
         (selectedCourse) =>
@@ -241,6 +245,7 @@ export default function Scheduler() {
   }
 
   function toggleCourseDropdown(courseId: string) {
+    setPreviewSection(null);
     setExpandedCourseIds((previousIds) => {
       const nextIds = new Set(previousIds);
 
@@ -271,7 +276,10 @@ export default function Scheduler() {
               <select
                 aria-label="Semester"
                 value={selectedTerm}
-                onChange={(event) => setSelectedTerm(event.target.value)}
+                onChange={(event) => {
+                  setPreviewSection(null);
+                  setSelectedTerm(event.target.value);
+                }}
                 className="cursor-pointer appearance-none rounded-sm border border-line bg-surface-muted py-2 pl-3 pr-9 text-xs font-medium text-ink transition-colors hover:border-carolina focus-visible:border-carolina focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carolina-strong sm:text-sm"
               >
                 {semesters.map((semester) => (
@@ -306,7 +314,10 @@ export default function Scheduler() {
             </button>
             <button
               type="button"
-              onClick={() => setViewMode("map")}
+              onClick={() => {
+                setPreviewSection(null);
+                setViewMode("map");
+              }}
               aria-pressed={viewMode === "map"}
               className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carolina-strong sm:px-4 sm:text-sm ${
                 viewMode === "map"
@@ -336,11 +347,13 @@ export default function Scheduler() {
                 removeCourse={removeSelectedCourse}
                 selectSection={selectSection}
                 removeSection={removeSection}
+                onPreviewSection={setPreviewSection}
                 dropdownCourse={toggleCourseDropdown}
               />
               <ScheduleCalendar
                 className="h-[36rem] min-w-0 flex-1 lg:h-full"
                 selectedSections={selectedSections}
+                previewSection={previewSection}
               />
             </div>
           ) : (

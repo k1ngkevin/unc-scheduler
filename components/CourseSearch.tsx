@@ -19,6 +19,7 @@ type CourseSearchProps = {
   removeCourse: (course: Course) => void;
   selectSection: (section: Section) => void;
   removeSection: (section: Section) => void;
+  onPreviewSection: (section: Section | null) => void;
   dropdownCourse: (courseId: string) => void;
 };
 
@@ -34,6 +35,7 @@ export default function CourseSearch({
   removeCourse,
   selectSection,
   removeSection,
+  onPreviewSection,
   dropdownCourse,
 }: CourseSearchProps) {
   const filteredCourses = useMemo<Course[]>(() => {
@@ -50,9 +52,7 @@ export default function CourseSearch({
     const subject = input[1];
     const courseNumber = input[2];
 
-    const selectedIds = new Set(
-      selectedCourses.map(courseKey),
-    );
+    const selectedIds = new Set(selectedCourses.map(courseKey));
 
     return courses.filter((course) => {
       if (selectedIds.has(courseKey(course))) {
@@ -126,8 +126,7 @@ export default function CourseSearch({
       <div className="mb-3 mt-6 flex items-center justify-between border-t border-line pt-4">
         <h2 className="text-xs font-semibold text-ink">Your courses</h2>
         <span className="text-xs tabular-nums text-muted">
-          {new Set(selectedSections.map(courseKey)).size}{" "}
-          courses,{" "}
+          {new Set(selectedSections.map(courseKey)).size} courses,{" "}
           {selectedSections.reduce(
             (sum, section) => sum + Number(section.max_credits),
             0,
@@ -153,6 +152,7 @@ export default function CourseSearch({
                 selectedSections={selectedSections}
                 selectSection={selectSection}
                 removeSection={removeSection}
+                onPreviewSection={onPreviewSection}
               />
             )}
           </div>

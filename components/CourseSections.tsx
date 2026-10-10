@@ -8,6 +8,7 @@ type CourseSectionsProps = {
   selectedSections: Section[];
   selectSection: (section: Section) => void;
   removeSection: (section: Section) => void;
+  onPreviewSection: (section: Section | null) => void;
 };
 
 export default function CourseSections({
@@ -15,6 +16,7 @@ export default function CourseSections({
   selectedSections,
   selectSection,
   removeSection,
+  onPreviewSection,
 }: CourseSectionsProps) {
   return (
     <div className="mt-1 grid divide-y divide-line rounded-sm border border-line">
@@ -38,6 +40,18 @@ export default function CourseSections({
             onClick={() =>
               selected ? removeSection(section) : selectSection(section)
             }
+            onPointerEnter={(event) => {
+              if (event.pointerType !== "touch") {
+                onPreviewSection(selected ? null : section);
+              }
+            }}
+            onPointerLeave={() => onPreviewSection(null)}
+            onFocus={(event) => {
+              if (event.currentTarget.matches(":focus-visible")) {
+                onPreviewSection(selected ? null : section);
+              }
+            }}
+            onBlur={() => onPreviewSection(null)}
           >
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-medium text-ink">

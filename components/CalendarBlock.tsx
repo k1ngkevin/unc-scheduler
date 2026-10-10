@@ -14,6 +14,7 @@ import {
 type CalendarBlockProps = {
   event: PositionedEvent;
   hue: number;
+  isPreview?: boolean;
   getMeetingStyle: (
     startTime: string,
     endTime: string,
@@ -23,6 +24,7 @@ type CalendarBlockProps = {
 export default function CalendarBlock({
   event,
   hue,
+  isPreview = false,
   getMeetingStyle,
 }: CalendarBlockProps) {
   const { top, height } = getMeetingStyle(
@@ -41,28 +43,38 @@ export default function CalendarBlock({
     middleware: [offset(8), flip()],
   });
 
-  const hover = useHover(context);
+  const hover = useHover(context, { enabled: !isPreview });
 
   const { getReferenceProps, getFloatingProps } = useInteractions([hover]);
 
   return (
     <>
       <div
-        className="absolute overflow-hidden rounded-sm border-l-[3px] p-1 text-[#172033]"
+        className={`absolute overflow-hidden rounded-sm border-l-[3px] p-1 text-[#172033] transition-opacity ${
+          isPreview ? "pointer-events-none z-[1] ring-2 ring-inset" : ""
+        }`}
         ref={refs.setReference}
         {...getReferenceProps()}
         style={{
           backgroundColor: `hsl(${hue} 65% 78%)`,
           borderColor: `hsl(${hue} 65% 40%)`,
+          opacity: isPreview ? 0.45 : 1,
           top: `${top}px`,
           height: `${height}px`,
           left: `calc(${leftPercent}% + 2px)`,
           width: `calc(${widthPercent}% - 4px)`,
         }}
       >
-        <h3 className="truncate text-xs font-semibold">
-          {event.section.subject} {event.section.course_number}
-        </h3>
+        <div className="flex items-center justify-between gap-1">
+          <h3 className="truncate text-xs font-semibold">
+            {event.section.subject} {event.section.course_number}
+          </h3>
+          {isPreview && (
+            <span className="shrink-0 text-[9px] font-semibold uppercase">
+              Preview
+            </span>
+          )}
+        </div>
         <p className="truncate text-xs leading-[12px]">
           {event.meeting.building} {event.meeting.room}
         </p>
@@ -76,7 +88,7 @@ export default function CalendarBlock({
         </p>
       </div>
 
-      {isOpen && (
+      {isOpen && !isPreview && (
         <div
           ref={refs.setFloating}
           style={floatingStyles}
