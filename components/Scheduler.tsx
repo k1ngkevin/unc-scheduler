@@ -12,6 +12,7 @@ import {
 import CourseSearch from "./CourseSearch";
 import ScheduleCalendar from "./Calendar";
 import { Toaster, toast } from "sonner";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
@@ -23,6 +24,11 @@ const MapView = dynamic(() => import("./MapView"), {
 });
 
 type ViewMode = "calendar" | "map";
+
+const semesters = [
+  { label: "Fall 2026", term: "2269" },
+  { label: "Spring 2027", term: "2272" },
+];
 
 export default function Scheduler() {
   const [query, setQuery] = useState("");
@@ -40,9 +46,11 @@ export default function Scheduler() {
     Record<string, Building>
   >({});
 
+  const [selectedTerm, setSelectedTerm] = useState("2272");
+
   useEffect(() => {
     async function fetchCourseData() {
-      const file_name = "2272.json";
+      const file_name = `${selectedTerm}.json`;
       const supabase_id = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID;
       const api_url = `https://${supabase_id}.supabase.co/storage/v1/object/public/course-data/scraped_data/${file_name}`;
       try {
@@ -64,7 +72,7 @@ export default function Scheduler() {
       }
     }
     fetchCourseData();
-  }, []);
+  }, [selectedTerm]);
 
   useEffect(() => {
     async function fetchBuildingCoords() {
@@ -245,15 +253,36 @@ export default function Scheduler() {
       <Toaster position="top-center" richColors closeButton />
       <header className="sticky top-0 z-[1100] border-b border-line bg-surface">
         <nav
-          className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6"
+          className="flex min-h-16 flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6"
           aria-label="Main navigation"
         >
-          <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
-            <span className="text-carolina-strong">UNC</span> Scheduler
-          </h1>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+            <h1 className="whitespace-nowrap text-lg font-semibold tracking-tight sm:text-xl">
+              <span className="text-carolina-strong">UNC</span> Scheduler
+            </h1>
+
+            <div className="relative">
+              <select
+                aria-label="Semester"
+                value={selectedTerm}
+                onChange={(event) => setSelectedTerm(event.target.value)}
+                className="cursor-pointer appearance-none rounded-sm border border-line bg-surface-muted py-2 pl-3 pr-9 text-xs font-medium text-ink transition-colors hover:border-carolina focus-visible:border-carolina focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carolina-strong sm:text-sm"
+              >
+                {semesters.map((semester) => (
+                  <option key={semester.term} value={semester.term}>
+                    {semester.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDownIcon
+                aria-hidden="true"
+                className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+              />
+            </div>
+          </div>
 
           <div
-            className="inline-flex gap-1 rounded-sm bg-surface-muted p-1"
+            className="ml-auto inline-flex shrink-0 gap-1 rounded-sm bg-surface-muted p-1"
             role="group"
             aria-label="Schedule view"
           >
