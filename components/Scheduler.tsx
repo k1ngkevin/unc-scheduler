@@ -11,6 +11,7 @@ import {
 } from "@/lib/courseIdentity";
 import CourseSearch from "./CourseSearch";
 import ScheduleCalendar from "./Calendar";
+import { Toaster, toast } from "sonner";
 
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
@@ -56,6 +57,10 @@ export default function Scheduler() {
         setAllSections(result);
       } catch (error) {
         console.error(error);
+        toast.error("Couldn't load courses", {
+          description: "Please check your connection and refresh the page.",
+          id: "course-fetch-error",
+        });
       }
     }
     fetchCourseData();
@@ -77,6 +82,10 @@ export default function Scheduler() {
         setBuildingCodeCoords(result);
       } catch (error) {
         console.error(error);
+        toast.error("Couldn't load building coordinates.", {
+          description: "Please check your connection and refresh the page.",
+          id: "building-fetch-error",
+        });
       }
     }
     fetchBuildingCoords();
@@ -112,6 +121,10 @@ export default function Scheduler() {
       }
     } catch (error) {
       console.error("failed to load schedule from localStorage");
+      toast.error("Couldn't load saved schedule.", {
+        description: "Please check your connection and refresh the page.",
+        id: "schedule-fetch-error",
+      });
     } finally {
       setStorageLoaded(true);
     }
@@ -133,6 +146,10 @@ export default function Scheduler() {
       );
     } catch {
       console.error("failed to save to localStorage");
+      toast.error("Couldn't save schedule.", {
+        description: "Please check your connection.",
+        id: "schedule-fetch-error",
+      });
     }
   }, [selectedCourses, selectedSections, expandedCourseIds, storageLoaded]);
 
@@ -225,6 +242,7 @@ export default function Scheduler() {
 
   return (
     <div className="flex min-h-screen flex-col font-sans">
+      <Toaster position="top-center" richColors closeButton />
       <header className="sticky top-0 z-[1100] border-b border-line bg-surface">
         <nav
           className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6"
