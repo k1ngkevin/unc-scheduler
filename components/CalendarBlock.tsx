@@ -13,6 +13,7 @@ import {
 
 type CalendarBlockProps = {
   event: PositionedEvent;
+  hue: number;
   getMeetingStyle: (
     startTime: string,
     endTime: string,
@@ -21,6 +22,7 @@ type CalendarBlockProps = {
 
 export default function CalendarBlock({
   event,
+  hue,
   getMeetingStyle,
 }: CalendarBlockProps) {
   const { top, height } = getMeetingStyle(
@@ -46,10 +48,12 @@ export default function CalendarBlock({
   return (
     <>
       <div
-        className="absolute overflow-hidden rounded-sm border-l-[3px] border-carolina bg-carolina-light p-1 text-ink"
+        className="absolute overflow-hidden rounded-sm border-l-[3px] p-1 text-[#172033]"
         ref={refs.setReference}
         {...getReferenceProps()}
         style={{
+          backgroundColor: `hsl(${hue} 65% 78%)`,
+          borderColor: `hsl(${hue} 65% 40%)`,
           top: `${top}px`,
           height: `${height}px`,
           left: `calc(${leftPercent}% + 2px)`,

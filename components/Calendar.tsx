@@ -13,6 +13,15 @@ export default function ScheduleCalendar({
   className,
   selectedSections,
 }: ScheduleCalendarProps) {
+  const courseKeys = Array.from(
+    new Set(
+      selectedSections.map((section) => `${section.term}:${section.course_id}`),
+    ),
+  );
+  const courseHues = new Map(
+    courseKeys.map((key, index) => [key, (205 + index * 137.508) % 360]),
+  );
+
   const times = [
     "8 AM",
     "9 AM",
@@ -155,6 +164,11 @@ export default function ScheduleCalendar({
                   <CalendarBlock
                     key={`${event.section.class_number}-${event.meetingIndex}-${day.code}`}
                     event={event}
+                    hue={
+                      courseHues.get(
+                        `${event.section.term}:${event.section.course_id}`,
+                      )!
+                    }
                     getMeetingStyle={getMeetingStyle}
                   />
                 );
