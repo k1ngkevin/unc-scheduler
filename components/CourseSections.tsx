@@ -1,4 +1,5 @@
 import { Section } from "@/lib/types";
+import { courseListingKey } from "@/lib/courseIdentity";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { to12Hour } from "@/lib/time";
 
@@ -19,7 +20,9 @@ export default function CourseSections({
     <div className="mt-1 grid divide-y divide-line rounded-sm border border-line">
       {sections.map((section) => {
         const selected = selectedSections.some(
-          (item) => item.class_number === section.class_number,
+          (item) =>
+            courseListingKey(item) === courseListingKey(section) &&
+            item.class_number === section.class_number,
         );
 
         return (

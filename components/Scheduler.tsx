@@ -3,8 +3,17 @@
 import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Course, CourseWithSections, Section, Building } from "@/lib/types";
+import {
+  courseKey,
+  courseListingKey,
+  sectionsForCourse,
+  restoreCourseListings,
+} from "@/lib/courseIdentity";
 import CourseSearch from "./CourseSearch";
 import ScheduleCalendar from "./Calendar";
+import { Toaster, toast } from "sonner";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { format } from "timeago.js";
 
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
@@ -16,6 +25,11 @@ const MapView = dynamic(() => import("./MapView"), {
 });
 
 type ViewMode = "calendar" | "map";
+
+const semesters = [
+  { label: "Fall 2026", term: "2269" },
+  { label: "Spring 2027", term: "2272" },
+];
 
 export default function Scheduler() {
   const [query, setQuery] = useState("");
@@ -33,9 +47,12 @@ export default function Scheduler() {
     Record<string, Building>
   >({});
 
+  const [selectedTerm, setSelectedTerm] = useState("2272");
+  const [lastUpdatedTime, setLastUpdatedTime] = useState("");
+
   useEffect(() => {
     async function fetchCourseData() {
-      const file_name = "2272.json";
+      const file_name = `${selectedTerm}.json`;
       const supabase_id = process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID;
       const api_url = `https://${supabase_id}.supabase.co/storage/v1/object/public/course-data/scraped_data/${file_name}`;
       try {
@@ -45,15 +62,23 @@ export default function Scheduler() {
           throw new Error(`response status: ${response.status}`);
         }
 
-        const result: Section[] = await response.json();
+        const data = await response.json();
+        const result: Section[] = data.classes;
 
         setAllSections(result);
+
+        const dateUpdated = data.scraped_date;
+        setLastUpdatedTime(format(dateUpdated));
       } catch (error) {
         console.error(error);
+        toast.error("Couldn't load courses", {
+          description: "Please check your connection and refresh the page.",
+          id: "course-fetch-error",
+        });
       }
     }
     fetchCourseData();
-  }, []);
+  }, [selectedTerm]);
 
   useEffect(() => {
     async function fetchBuildingCoords() {
@@ -71,6 +96,10 @@ export default function Scheduler() {
         setBuildingCodeCoords(result);
       } catch (error) {
         console.error(error);
+        toast.error("Couldn't load building coordinates.", {
+          description: "Please check your connection and refresh the page.",
+          id: "building-fetch-error",
+        });
       }
     }
     fetchBuildingCoords();
@@ -83,20 +112,33 @@ export default function Scheduler() {
       if (saved) {
         const data = JSON.parse(saved);
 
-        if (Array.isArray(data?.selectedCourses)) {
-          setSelectedCourses(data.selectedCourses);
-        }
-
-        if (Array.isArray(data?.selectedSections)) {
-          setSelectedSections(data.selectedSections);
-        }
+        const restored = restoreCourseListings(
+          Array.isArray(data?.selectedCourses) ? data.selectedCourses : [],
+          Array.isArray(data?.selectedSections) ? data.selectedSections : [],
+        );
+        setSelectedCourses(restored.courses);
+        setSelectedSections(restored.sections);
 
         if (Array.isArray(data?.expandedCourseIds)) {
-          setExpandedCourseIds(new Set(data.expandedCourseIds));
+          setExpandedCourseIds(
+            new Set(
+              restored.courses
+                .filter(
+                  (course) =>
+                    data.expandedCourseIds.includes(courseListingKey(course)) ||
+                    data.expandedCourseIds.includes(course.course_id),
+                )
+                .map(courseListingKey),
+            ),
+          );
         }
       }
     } catch (error) {
       console.error("failed to load schedule from localStorage");
+      toast.error("Couldn't load saved schedule.", {
+        description: "Please check your connection and refresh the page.",
+        id: "schedule-fetch-error",
+      });
     } finally {
       setStorageLoaded(true);
     }
@@ -113,11 +155,15 @@ export default function Scheduler() {
         JSON.stringify({
           selectedCourses,
           selectedSections,
-          expandedCourseIds,
+          expandedCourseIds: Array.from(expandedCourseIds),
         }),
       );
     } catch {
       console.error("failed to save to localStorage");
+      toast.error("Couldn't save schedule.", {
+        description: "Please check your connection.",
+        id: "schedule-fetch-error",
+      });
     }
   }, [selectedCourses, selectedSections, expandedCourseIds, storageLoaded]);
 
@@ -125,7 +171,7 @@ export default function Scheduler() {
     const uniqueCourses = new Map<string, Course>();
 
     for (const section of allSections) {
-      const key = `${section.subject}-${section.course_id}`;
+      const key = courseListingKey(section);
       if (!uniqueCourses.has(key)) {
         uniqueCourses.set(key, {
           course_id: section.course_id,
@@ -143,7 +189,7 @@ export default function Scheduler() {
   function addCourse(course: Course) {
     setSelectedCourses((previousCourses) => {
       const alreadySelected = previousCourses.some(
-        (selected) => selected.course_id === course.course_id,
+        (selected) => courseKey(selected) === courseKey(course),
       );
 
       if (alreadySelected) {
@@ -152,9 +198,7 @@ export default function Scheduler() {
 
       const courseWithSections: CourseWithSections = {
         ...course,
-        sections: allSections.filter(
-          (section) => section.course_id === course.course_id,
-        ),
+        sections: sectionsForCourse(course, allSections),
       };
       return [...previousCourses, courseWithSections];
     });
@@ -164,7 +208,7 @@ export default function Scheduler() {
     setSelectedSections((previousSections) => [
       ...previousSections.filter(
         (selected) =>
-          selected.course_id !== section.course_id ||
+          courseKey(selected) !== courseKey(section) ||
           selected.component !== section.component,
       ),
       section,
@@ -174,7 +218,9 @@ export default function Scheduler() {
   function removeSection(section: Section) {
     setSelectedSections((previousSections) =>
       previousSections.filter(
-        (selected) => selected.class_number !== section.class_number,
+        (selected) =>
+          selected.term !== section.term ||
+          selected.class_number !== section.class_number,
       ),
     );
   }
@@ -182,13 +228,14 @@ export default function Scheduler() {
   function removeSelectedCourse(course: Course) {
     setSelectedCourses((previousCourses) =>
       previousCourses.filter(
-        (selectedCourse) => selectedCourse.course_id !== course.course_id,
+        (selectedCourse) =>
+          courseListingKey(selectedCourse) !== courseListingKey(course),
       ),
     );
 
     setSelectedSections((previousSections) =>
       previousSections.filter(
-        (section) => section.course_id !== course.course_id,
+        (section) => courseListingKey(section) !== courseListingKey(course),
       ),
     );
   }
@@ -209,17 +256,39 @@ export default function Scheduler() {
 
   return (
     <div className="flex min-h-screen flex-col font-sans">
+      <Toaster position="top-center" richColors closeButton />
       <header className="sticky top-0 z-[1100] border-b border-line bg-surface">
         <nav
-          className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6"
+          className="flex min-h-16 flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6"
           aria-label="Main navigation"
         >
-          <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
-            <span className="text-carolina-strong">UNC</span> Scheduler
-          </h1>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+            <h1 className="whitespace-nowrap text-lg font-semibold tracking-tight sm:text-xl">
+              <span className="text-carolina-strong">UNC</span> Scheduler
+            </h1>
+
+            <div className="relative">
+              <select
+                aria-label="Semester"
+                value={selectedTerm}
+                onChange={(event) => setSelectedTerm(event.target.value)}
+                className="cursor-pointer appearance-none rounded-sm border border-line bg-surface-muted py-2 pl-3 pr-9 text-xs font-medium text-ink transition-colors hover:border-carolina focus-visible:border-carolina focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carolina-strong sm:text-sm"
+              >
+                {semesters.map((semester) => (
+                  <option key={semester.term} value={semester.term}>
+                    {semester.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDownIcon
+                aria-hidden="true"
+                className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+              />
+            </div>
+          </div>
 
           <div
-            className="inline-flex gap-1 rounded-sm bg-surface-muted p-1"
+            className="ml-auto inline-flex shrink-0 gap-1 rounded-sm bg-surface-muted p-1"
             role="group"
             aria-label="Schedule view"
           >
@@ -251,7 +320,7 @@ export default function Scheduler() {
         </nav>
       </header>
 
-      <main className="flex-1 px-4 py-6 sm:px-6">
+      <main className="flex-1 px-4 pt-6 pb-20 sm:px-6">
         <div className="flex flex-col lg:h-[calc(100vh-7rem)] lg:min-h-[36rem] lg:flex-row">
           {viewMode === "calendar" ? (
             <div className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row">
@@ -283,6 +352,11 @@ export default function Scheduler() {
           )}
         </div>
       </main>
+      <footer className="fixed inset-x-0 bottom-0 z-[1100] border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-xs text-muted sm:px-6">
+        <p role="status">
+          Course data last updated: {lastUpdatedTime || "Unavailable"}
+        </p>
+      </footer>
     </div>
   );
 }
