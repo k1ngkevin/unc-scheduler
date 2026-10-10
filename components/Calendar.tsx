@@ -2,20 +2,43 @@
 
 import { Section, PositionedEvent } from "@/lib/types";
 import { timeToMinutes } from "@/lib/time";
+import { courseKey } from "@/lib/courseIdentity";
 import CalendarBlock from "./CalendarBlock";
 
 type ScheduleCalendarProps = {
   className?: string;
   selectedSections: Section[];
+  previewSection?: Section | null;
 };
 
 export default function ScheduleCalendar({
   className,
   selectedSections,
+  previewSection = null,
 }: ScheduleCalendarProps) {
+  const visiblePreview = previewSection?.meetings.some(
+    (meeting) =>
+      meeting.start_time &&
+      meeting.end_time &&
+      meeting.days.some((day) => ["Mo", "Tu", "We", "Th", "Fr"].includes(day)),
+  )
+    ? previewSection
+    : null;
+  const displayedSections = visiblePreview
+    ? [
+        ...selectedSections.filter(
+          (section) =>
+            courseKey(section) !== courseKey(visiblePreview) ||
+            section.component !== visiblePreview.component,
+        ),
+        visiblePreview,
+      ]
+    : selectedSections;
   const courseKeys = Array.from(
     new Set(
-      selectedSections.map((section) => `${section.term}:${section.course_id}`),
+      [...selectedSections, ...(visiblePreview ? [visiblePreview] : [])].map(
+        courseKey,
+      ),
     ),
   );
   const courseHues = new Map(
@@ -159,11 +182,13 @@ export default function ScheduleCalendar({
                 />
               ))}
 
-              {getDayEvents(day.code, selectedSections).map((event) => {
+              {getDayEvents(day.code, displayedSections).map((event) => {
+                const isPreview = event.section === visiblePreview;
                 return (
                   <CalendarBlock
-                    key={`${event.section.class_number}-${event.meetingIndex}-${day.code}`}
+                    key={`${event.section.term}-${event.section.class_number}-${event.meetingIndex}-${day.code}`}
                     event={event}
+                    isPreview={isPreview}
                     hue={
                       courseHues.get(
                         `${event.section.term}:${event.section.course_id}`,
