@@ -146,6 +146,11 @@ export default function CourseSearch({
               removeCourse={() => removeCourse(course)}
               onClick={() => dropdownCourse(courseListingKey(course))}
             />
+            {course.sections.length === 0 && (
+              <p className="mt-1 text-xs text-muted">
+                No sections found for this course in the current data.
+              </p>
+            )}
             {expandedCourseIds.has(courseListingKey(course)) && (
               <CourseSections
                 sections={course.sections}

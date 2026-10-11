@@ -46,6 +46,14 @@ export type CourseWithSections = Course & {
   sections: Section[];
 };
 
+export type SavedSchedule = {
+  id: string;
+  name: string;
+  term: string;
+  selectedCourses: Course[];
+  selectedClassNumbers: number[];
+};
+
 export type PositionedEvent = {
   section: Section;
   meeting: Meeting;
