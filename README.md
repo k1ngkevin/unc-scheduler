@@ -17,6 +17,29 @@ across separate tools.
 - Inspect calendar details, including instructors, locations, and credits.
 - Switch to a campus map showing buildings for selected classes.
 - Save selected courses and sections in the current browser using localStorage.
+- Keep named schedules in a saved-schedules list with Save as new, Load, and
+  Delete. Open the list from the top bar's Saved schedules button;
+  a modal keeps the course sidebar free. Course and section edits automatically
+  update the active named schedule; the current draft also autosaves separately.
+- Load a saved schedule's semester and refresh its sections from current course
+  data, with a notice for classes that are no longer available.
+- Share a snapshot using the top bar's Share button. Recipients can preview the
+  calendar and save a separate copy without replacing their current draft.
+
+Saved schedules stay in the browser where they were created; they do not sync
+between devices. Loading a schedule or starting a new draft asks before replacing
+changes that have not been saved to a named schedule. Deleting a saved schedule
+keeps the current draft open. Save as new gives an unnamed draft a name or makes
+a separate copy of a plan. Loading and hovering do not overwrite saved plans.
+If an automatic save fails, edits stay open and Save changes lets you retry.
+
+Share links contain the schedule name, semester, course listings, and selected
+class numbers in a versioned URL fragment (`#share=...`); no account or shared
+schedule database is required. Anyone with the link can view it. Later edits
+do not update an existing link. Previews use the latest catalog meeting details,
+flag unavailable classes, and preserve the original selections when saving a
+copy. A duplicate name gets a `(copy)` suffix. If automatic clipboard access
+is unavailable, the link can be selected and copied manually.
 
 ## Roadmap
 
@@ -29,7 +52,7 @@ Potential follow-up features:
 1. Show instructor and building details while comparing sections.
 2. Flag difficult transitions between consecutive classes using walking
    distance or travel time.
-3. Add sharing or calendar export.
+3. Add calendar export.
 4. Explore automatic schedule generation if student feedback supports it.
 
 ## Tech stack
@@ -84,6 +107,7 @@ Then open [http://localhost:3000](http://localhost:3000).
 | `npm run build`    | Create a production build.    |
 | `npm run start`    | Serve the production build.   |
 | `npm run lint`     | Run ESLint.                   |
+| `npm test`         | Test saved schedules and editor interactions. |
 | `npx tsc --noEmit` | Check TypeScript types.       |
 
 `npm run build -- --webpack` is an alternative build command when troubleshooting
