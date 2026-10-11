@@ -48,6 +48,7 @@ const load = sourceLoader({
   "next/dynamic": { default: () => () => null, __esModule: true },
 });
 const Scheduler = load("components/Scheduler.tsx").default;
+const { createShareUrl, decodeSharedSchedule } = load("lib/sharedSchedules.ts");
 const spring = section();
 const alternate = section({ class_number: 102, section: "002" });
 const fall = section({
@@ -142,6 +143,11 @@ beforeEach(() => {
   notices.length = 0;
   document.body.style.overflow = "";
   localStorage.clear();
+  window.history.replaceState(null, "", "/");
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: undefined,
+  });
   dom.window.confirm = () => true;
   fetchHandler = defaultFetch;
   globalThis.fetch = (...args) => fetchHandler(...args);
@@ -172,7 +178,7 @@ test("newly named schedules autosave edits and restore them on reload", async ()
   await click(alternativeButton);
   assert.deepEqual(draft().selectedClassNumbers, [102]);
   assert.deepEqual(plans()[0].selectedClassNumbers, [102]);
-  assert(container.querySelector("nav").textContent.includes("Autosaved"));
+  assert(container.querySelector("nav").textContent.includes("My spring plan"));
   assert.equal(container.querySelector('[aria-label="Save changes"]'), null);
   await act(async () => root.unmount());
   await mount();
@@ -224,7 +230,7 @@ test("loading waits for the target term, then survives a reload with its active 
     container.querySelector('[aria-label="Semester"]').value,
     "2269",
   );
-  assert(container.textContent.includes("Fall plan · Autosaved"));
+  assert(container.querySelector("nav").textContent.includes("Fall plan"));
   assert.deepEqual(plans(), [springPlan, fallPlan]);
 });
 
@@ -535,10 +541,7 @@ test("failed autosaves retain the previous plan and current edits, with a workin
   );
   assert.deepEqual(plans(), [springPlan]);
   assert.deepEqual(draft().selectedClassNumbers, [102]);
-  assert(
-    container.querySelector("nav").textContent.includes("Unsaved changes"),
-  );
-  assert(!container.querySelector("nav").textContent.includes("Autosaved"));
+  assert(container.querySelector('[aria-label="Save changes"]'));
   assert(
     notices.some(
       (notice) => notice.args[0] === "Couldn't save schedules in this browser",
@@ -547,7 +550,7 @@ test("failed autosaves retain the previous plan and current edits, with a workin
   dom.window.Storage.prototype.setItem = originalSetItem;
   await click(button("Save changes"));
   assert.deepEqual(plans()[0].selectedClassNumbers, [102]);
-  assert(container.querySelector("nav").textContent.includes("Autosaved"));
+  assert.equal(container.querySelector('[aria-label="Save changes"]'), null);
 });
 
 test("hovering a section previews it without autosaving", async () => {
@@ -563,4 +566,233 @@ test("hovering a section previews it without autosaving", async () => {
   assert(container.textContent.includes("Preview"));
   assert.equal(localStorage.getItem("savedSchedules"), before);
   assert.deepEqual(draft().selectedClassNumbers, [101]);
+});
+
+test("sharing copies a fixed snapshot and supports manual copy when clipboard is unavailable", async () => {
+  seed([springPlan], springPlan.id);
+  await mount();
+  const before = draft();
+  const beforePlans = plans();
+  const shareButton = button("Share schedule");
+  shareButton.focus();
+  await click(shareButton);
+  const input = container.querySelector("#schedule-share-link");
+  const link = input.value;
+  assert.deepEqual(
+    decodeSharedSchedule(new URL(link).hash.slice(7)).selectedClassNumbers,
+    [101],
+  );
+  let copied;
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: {
+      writeText: async (value) => {
+        copied = value;
+      },
+    },
+  });
+  await click(button("Copy link"));
+  assert.equal(copied, link);
+  assert(
+    container.querySelector("dialog").textContent.includes("Link copied!"),
+  );
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: {
+      writeText: async () => {
+        throw new Error("Denied");
+      },
+    },
+  });
+  await click(button("Copy link"));
+  assert.equal(document.activeElement, input);
+  assert.equal(input.selectionEnd, link.length);
+  assert(
+    container
+      .querySelector("dialog")
+      .textContent.includes("Copy the selected link"),
+  );
+  await click(button("Close share dialog"));
+  assert.equal(document.activeElement, shareButton);
+  assert.deepEqual(draft(), before);
+  assert.deepEqual(plans(), beforePlans);
+  await click(
+    [...container.querySelectorAll("button")].find((node) =>
+      node.textContent.startsWith("Section 002"),
+    ),
+  );
+  assert.deepEqual(
+    decodeSharedSchedule(new URL(link).hash.slice(7)).selectedClassNumbers,
+    [101],
+  );
+  await click(button("Share schedule"));
+  assert.deepEqual(
+    decodeSharedSchedule(
+      new URL(container.querySelector("#schedule-share-link").value).hash.slice(
+        7,
+      ),
+    ).selectedClassNumbers,
+    [102],
+  );
+});
+
+test("shared previews load their own semester and save a separate copy without replacing the draft", async () => {
+  seed([springPlan, fallPlan], springPlan.id);
+  const before = draft();
+  window.history.replaceState(
+    null,
+    "",
+    createShareUrl(fallPlan, window.location.href),
+  );
+  await mount();
+  const dialog = container.querySelector("dialog[open]");
+  assert(dialog.textContent.includes("Fall 2026"));
+  assert(dialog.textContent.includes("MATH 231"));
+  assert.equal(document.body.style.overflow, "hidden");
+  assert.deepEqual(draft(), before);
+  assert.equal(plans().length, 2);
+  await click(button("Save a copy"));
+  assert.equal(container.querySelector("dialog"), null);
+  assert.equal(window.location.hash, "");
+  assert.equal(document.body.style.overflow, "");
+  assert.equal(plans().length, 3);
+  const copy = plans()[2];
+  assert.notEqual(copy.id, fallPlan.id);
+  assert.equal(copy.name, "Fall plan (copy)");
+  assert.deepEqual(copy.selectedClassNumbers, [201]);
+  assert.equal(draft().activeScheduleId, springPlan.id);
+  assert.deepEqual(draft().selectedClassNumbers, before.selectedClassNumbers);
+  await loadPlan(copy.name);
+  assert.equal(draft().activeScheduleId, copy.id);
+  assert.equal(draft().term, "2269");
+});
+
+test("invalid share links show an error and never modify saved schedules", async () => {
+  seed([springPlan], springPlan.id);
+  const before = plans();
+  window.history.replaceState(null, "", "/#share=broken-link");
+  await mount();
+  assert(
+    container
+      .querySelector("dialog [role=alert]")
+      .textContent.includes("invalid or unsupported"),
+  );
+  assert.deepEqual(plans(), before);
+  assert.equal(container.querySelector("dialog button").textContent.trim(), "");
+  await act(async () =>
+    container
+      .querySelector("dialog")
+      .dispatchEvent(new dom.window.Event("cancel", { cancelable: true })),
+  );
+  assert.equal(container.querySelector("dialog"), null);
+  assert.equal(window.location.hash, "");
+});
+
+test("shared course fetch failures can be retried without changing the current semester", async () => {
+  seed([springPlan], springPlan.id);
+  window.history.replaceState(
+    null,
+    "",
+    createShareUrl(fallPlan, window.location.href),
+  );
+  fetchHandler = (url) =>
+    url.includes("2269.json")
+      ? Promise.resolve({ ok: false })
+      : defaultFetch(url);
+  await mount();
+  assert(
+    container
+      .querySelector("dialog [role=alert]")
+      .textContent.includes("Couldn't load"),
+  );
+  assert(button("Save a copy").disabled);
+  assert.equal(draft().term, "2272");
+  fetchHandler = defaultFetch;
+  await click(button("Retry preview"));
+  assert.equal(container.querySelector("dialog [role=alert]"), null);
+  assert(!button("Save a copy").disabled);
+  assert(container.querySelector("dialog").textContent.includes("MATH 231"));
+  assert.equal(draft().term, "2272");
+});
+
+test("shared preview preserves missing sections and reports storage failures inside the dialog", async () => {
+  seed([springPlan], springPlan.id);
+  const shared = { ...fallPlan, selectedClassNumbers: [201, 999] };
+  window.history.replaceState(
+    null,
+    "",
+    createShareUrl(shared, window.location.href),
+  );
+  await mount();
+  assert(
+    container
+      .querySelector("dialog")
+      .textContent.includes("Missing class numbers: 999"),
+  );
+  dom.window.Storage.prototype.setItem = function (key, value) {
+    if (key === "savedSchedules") throw new Error("Storage full");
+    return originalSetItem.call(this, key, value);
+  };
+  await click(button("Save a copy"));
+  assert(
+    container
+      .querySelector("dialog")
+      .textContent.includes("Couldn't save this copy"),
+  );
+  assert.equal(plans().length, 1);
+  assert.equal(draft().activeScheduleId, springPlan.id);
+  dom.window.Storage.prototype.setItem = originalSetItem;
+  await click(button("Save a copy"));
+  assert.deepEqual(plans()[1].selectedClassNumbers, [201, 999]);
+});
+
+test("a new share hash opens a preview and dismissing it aborts its pending request", async () => {
+  seed([springPlan], springPlan.id);
+  await mount();
+  const before = draft();
+  let previewSignal;
+  fetchHandler = (url, options) => {
+    if (url.includes("2269.json")) {
+      previewSignal = options.signal;
+      return new Promise(() => {});
+    }
+    return defaultFetch(url);
+  };
+  await act(async () => {
+    window.history.replaceState(
+      null,
+      "",
+      createShareUrl(fallPlan, window.location.href),
+    );
+    window.dispatchEvent(new dom.window.Event("hashchange"));
+  });
+  assert(
+    container
+      .querySelector("dialog")
+      .textContent.includes("Loading shared schedule"),
+  );
+  await click(button("Close share dialog"));
+  assert(previewSignal.aborted);
+  assert.deepEqual(draft(), before);
+});
+
+test("shared previews work with unavailable saved storage and list untimed sections", async () => {
+  localStorage.setItem("savedSchedules", "broken JSON");
+  window.history.replaceState(
+    null,
+    "",
+    createShareUrl(fallPlan, window.location.href),
+  );
+  fetchHandler = (url) =>
+    url.includes("2269.json")
+      ? Promise.resolve(response([{ ...fall, meetings: [] }]))
+      : defaultFetch(url);
+  await mount();
+  assert(
+    container
+      .querySelector("dialog")
+      .textContent.includes("No meeting time listed"),
+  );
+  assert(button("Save a copy").disabled);
+  assert.equal(localStorage.getItem("savedSchedules"), "broken JSON");
 });

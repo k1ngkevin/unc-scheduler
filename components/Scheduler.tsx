@@ -26,9 +26,15 @@ import {
 } from "@/lib/savedSchedules";
 import CourseSearch from "./CourseSearch";
 import SavedSchedules from "./SavedSchedules";
+import { ShareScheduleDialog, SharedSchedulePreview } from "./ShareSchedule";
+import {
+  createShareUrl,
+  sharedCopyName,
+  type SharedSchedule,
+} from "@/lib/sharedSchedules";
 import ScheduleCalendar from "./Calendar";
 import { Toaster, toast } from "sonner";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, ShareIcon } from "@heroicons/react/24/outline";
 import { format } from "timeago.js";
 
 const MapView = dynamic(() => import("./MapView"), {
@@ -82,6 +88,8 @@ export default function Scheduler() {
     null,
   );
   const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [sharedToken, setSharedToken] = useState<string | null>(null);
   const [activeScheduleId, setActiveScheduleId] = useState<string | null>(null);
   const [savedSchedulesAvailable, setSavedSchedulesAvailable] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
@@ -93,6 +101,27 @@ export default function Scheduler() {
 
   const [selectedTerm, setSelectedTerm] = useState("2272");
   const [lastUpdatedTime, setLastUpdatedTime] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    function readSharedLink() {
+      if (cancelled) return;
+      const hash = window.location.hash;
+      const token = hash.startsWith("#share=") ? hash.slice(7) : null;
+      setSharedToken(token);
+      if (token !== null) {
+        setShareUrl(null);
+        setSchedulesMode(null);
+        setPreviewSection(null);
+      }
+    }
+    queueMicrotask(readSharedLink);
+    window.addEventListener("hashchange", readSharedLink);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("hashchange", readSharedLink);
+    };
+  }, []);
 
   useEffect(() => {
     if (!pendingLoad) return;
@@ -232,7 +261,7 @@ export default function Scheduler() {
   }, []);
 
   useEffect(() => {
-    if (!storageLoaded || !draftReady || pendingLoad) {
+    if (!storageLoaded || !draftReady || pendingLoad || sharedToken !== null) {
       return;
     }
 
@@ -265,6 +294,7 @@ export default function Scheduler() {
     storageLoaded,
     draftReady,
     pendingLoad,
+    sharedToken,
   ]);
 
   const currentSelection = createScheduleSelection(
@@ -324,6 +354,52 @@ export default function Scheduler() {
     setScheduleError(null);
     toast.success(`Saved ${schedule.name}`);
     return true;
+  }
+
+  function shareSchedule() {
+    if (isLoading || !draftReady) return;
+    try {
+      setPreviewSection(null);
+      setShareUrl(
+        createShareUrl(
+          {
+            ...currentSelection,
+            name: activeSchedule?.name ?? "Shared schedule",
+          },
+          window.location.href,
+        ),
+      );
+    } catch {
+      toast.error("Couldn't create a share link", {
+        description: "This schedule is too large or contains unsupported data.",
+      });
+    }
+  }
+
+  function saveSharedCopy(shared: SharedSchedule): boolean {
+    const copy: SavedSchedule = {
+      ...shared,
+      id: crypto.randomUUID(),
+      name: sharedCopyName(shared.name, savedSchedules),
+    };
+    if (!persistSavedSchedules([...savedSchedules, copy])) return false;
+    setScheduleError(null);
+    toast.success(`Saved ${copy.name}`, {
+      description:
+        "Open Saved schedules to load your copy. Your current draft was kept.",
+    });
+    return true;
+  }
+
+  function closeSharedPreview() {
+    setSharedToken(null);
+    if (window.location.hash.startsWith("#share=")) {
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname + window.location.search,
+      );
+    }
   }
 
   function saveScheduleChanges() {
@@ -602,6 +678,19 @@ export default function Scheduler() {
             >
               Saved schedules
             </button>
+            <button
+              type="button"
+              aria-label="Share schedule"
+              aria-haspopup="dialog"
+              disabled={
+                isLoading || !draftReady || selectedCourses.length === 0
+              }
+              onClick={shareSchedule}
+              className="inline-flex items-center gap-1.5 rounded-sm border border-line bg-surface-muted px-3 py-2 text-xs font-medium hover:border-carolina focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carolina-strong disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ShareIcon aria-hidden="true" className="size-4" />
+              Share
+            </button>
           </div>
 
           <div
@@ -711,6 +800,19 @@ export default function Scheduler() {
           Course data last updated: {lastUpdatedTime || "Unavailable"}
         </p>
       </footer>
+      {shareUrl && (
+        <ShareScheduleDialog url={shareUrl} onClose={() => setShareUrl(null)} />
+      )}
+      {sharedToken !== null && (
+        <SharedSchedulePreview
+          key={sharedToken}
+          token={sharedToken}
+          semesterLabel={semesterLabel}
+          canSave={savedSchedulesAvailable}
+          onSave={saveSharedCopy}
+          onClose={closeSharedPreview}
+        />
+      )}
       {schedulesMode && (
         <SavedSchedules
           schedules={savedSchedules}
