@@ -26,6 +26,7 @@ import {
 } from "@/lib/savedSchedules";
 import CourseSearch from "./CourseSearch";
 import SavedSchedules from "./SavedSchedules";
+import GeneratedSchedules from "./GeneratedSchedules";
 import { ShareScheduleDialog, SharedSchedulePreview } from "./ShareSchedule";
 import {
   createShareUrl,
@@ -79,6 +80,7 @@ export default function Scheduler() {
   );
   const [selectedSections, setSelectedSections] = useState<Section[]>([]);
   const [previewSection, setPreviewSection] = useState<Section | null>(null);
+  const [showGeneratedSchedules, setShowGeneratedSchedules] = useState(false);
   const [expandedCourseIds, setExpandedCourseIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -110,6 +112,7 @@ export default function Scheduler() {
       const token = hash.startsWith("#share=") ? hash.slice(7) : null;
       setSharedToken(token);
       if (token !== null) {
+        setShowGeneratedSchedules(false);
         setShareUrl(null);
         setSchedulesMode(null);
         setPreviewSection(null);
@@ -539,6 +542,14 @@ export default function Scheduler() {
     );
   }
 
+  function applyGeneratedSchedule(sections: Section[]) {
+    if (isLoading || !draftReady) return;
+    setPreviewSection(null);
+    updateCurrentSchedule(selectedCourses, sections);
+    setShowGeneratedSchedules(false);
+    setViewMode("calendar");
+  }
+
   function selectSection(section: Section) {
     setPreviewSection(null);
     updateCurrentSchedule(selectedCourses, [
@@ -666,6 +677,21 @@ export default function Scheduler() {
                 {activeSchedule ? "Save changes" : "Save"}
               </button>
             )}
+            <button
+              type="button"
+              id="generate-schedules-button"
+              aria-haspopup="dialog"
+              aria-controls="generated-schedules-dialog"
+              aria-expanded={showGeneratedSchedules}
+              disabled={isLoading || !draftReady || selectedCourses.length === 0}
+              onClick={() => {
+                setPreviewSection(null);
+                setShowGeneratedSchedules(true);
+              }}
+              className="rounded-sm border border-line bg-surface-muted px-3 py-2 text-xs font-medium hover:border-carolina focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-carolina-strong disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Generate schedules
+            </button>
             <button
               type="button"
               id="saved-schedules-button"
@@ -802,6 +828,13 @@ export default function Scheduler() {
       </footer>
       {shareUrl && (
         <ShareScheduleDialog url={shareUrl} onClose={() => setShareUrl(null)} />
+      )}
+      {showGeneratedSchedules && (
+        <GeneratedSchedules
+          courses={selectedCourses}
+          onApply={applyGeneratedSchedule}
+          onClose={() => setShowGeneratedSchedules(false)}
+        />
       )}
       {sharedToken !== null && (
         <SharedSchedulePreview

@@ -3,7 +3,7 @@ import { beforeEach, afterEach, test } from "node:test";
 import { JSDOM } from "jsdom";
 import React, { act } from "react";
 import { sourceLoader } from "./loadSource.mjs";
-import { section, savedSchedule } from "./fixtures.mjs";
+import { section, course, savedSchedule } from "./fixtures.mjs";
 
 const dom = new JSDOM("<!doctype html><html><body></body></html>", {
   url: "http://localhost/",
@@ -795,4 +795,110 @@ test("shared previews work with unavailable saved storage and list untimed secti
   );
   assert(button("Save a copy").disabled);
   assert.equal(localStorage.getItem("savedSchedules"), "broken JSON");
+});
+
+async function changeGeneratedSort(value) {
+  const select = container.querySelector('[aria-label="Sort generated schedules"]');
+  await act(async () => {
+    select.value = value;
+    select.dispatchEvent(new dom.window.Event("change", { bubbles: true }));
+  });
+}
+
+test("generated schedules sort and preview without saving, then apply to the active plan", async () => {
+  const late = section({
+    class_number: 102, section: "002",
+    meetings: [{ ...spring.meetings[0], start_time: "14:00", end_time: "14:50" }],
+  });
+  const compact = section({
+    class_number: 103, section: "003",
+    meetings: [{ ...spring.meetings[0], start_time: "11:00", end_time: "11:50" }],
+  });
+  const early = section({ meetings: [
+    { ...spring.meetings[0], start_time: "08:00", end_time: "08:50" },
+    { ...spring.meetings[0], start_time: "10:00", end_time: "10:50" },
+  ] });
+  fetchHandler = (url) => url.includes("2272.json")
+    ? Promise.resolve(response([early, compact, late])) : defaultFetch(url);
+  seed([springPlan, fallPlan], springPlan.id);
+  await mount();
+  const beforeDraft = draft();
+  const beforePlans = plans();
+  const opener = button("Generate schedules");
+  opener.focus();
+  await click(opener);
+  const generatedSections = () => container.querySelector('[aria-label="Generated sections"]').textContent;
+  assert(generatedSections().includes("Class 101"));
+  assert(button("Previous generated schedule").disabled);
+  await click(button("Next generated schedule"));
+  assert(generatedSections().includes("Class 103"));
+  await changeGeneratedSort("latest-start");
+  assert(generatedSections().includes("Class 102"));
+  assert(button("Previous generated schedule").disabled);
+  await changeGeneratedSort("most-compact");
+  assert(generatedSections().includes("Class 103"));
+  assert.deepEqual(draft(), beforeDraft);
+  assert.deepEqual(plans(), beforePlans);
+  await click(button("Close generated schedules"));
+  assert.equal(document.activeElement, opener);
+  assert.deepEqual(draft(), beforeDraft);
+  await click(opener);
+  await changeGeneratedSort("latest-start");
+  await click(button("Use this schedule"));
+  assert.equal(container.querySelector("dialog"), null);
+  assert.deepEqual(draft().selectedClassNumbers, [102]);
+  assert.deepEqual(plans()[0].selectedClassNumbers, [102]);
+  assert.deepEqual(plans()[1], fallPlan);
+  assert.equal(button("Calendar").getAttribute("aria-pressed"), "true");
+  await act(async () => root.unmount());
+  await mount();
+  assert.deepEqual(draft().selectedClassNumbers, [102]);
+});
+
+test("applying a generated schedule includes the lecture and recitation", async () => {
+  const recitation = section({
+    class_number: 103, section: "601", component: "REC",
+    meetings: [{ ...spring.meetings[0], days: ["Tu"], start_time: "14:00", end_time: "14:50" }],
+  });
+  fetchHandler = (url) => url.includes("2272.json")
+    ? Promise.resolve(response([spring, recitation])) : defaultFetch(url);
+  seed();
+  await mount();
+  await click(button("Generate schedules"));
+  assert(container.querySelector('[aria-label="Generated sections"]').textContent.includes("REC 601"));
+  await click(button("Use this schedule"));
+  assert.deepEqual(draft().selectedClassNumbers, [101, 103]);
+  assert.deepEqual(plans(), []);
+});
+
+test("no compatible schedules and Escape preserve the draft", async () => {
+  const conflicting = section({ class_number: 201, course_id: "002", subject: "MATH", course_number: "231" });
+  const plan = { ...springPlan, selectedCourses: [course(spring), course(conflicting)] };
+  fetchHandler = (url) => url.includes("2272.json")
+    ? Promise.resolve(response([spring, conflicting])) : defaultFetch(url);
+  seed([plan], plan.id);
+  localStorage.setItem("schedule", JSON.stringify({ ...plan, activeScheduleId: plan.id, expandedCourseIds: [] }));
+  await mount();
+  const before = draft();
+  await click(button("Generate schedules"));
+  assert(container.querySelector("dialog").textContent.includes("No compatible schedules found"));
+  assert(!container.querySelector("dialog").textContent.includes("Use this schedule"));
+  await act(async () => container.querySelector("dialog").dispatchEvent(
+    new dom.window.Event("cancel", { cancelable: true }),
+  ));
+  assert.equal(container.querySelector("dialog"), null);
+  assert.deepEqual(draft(), before);
+  assert.deepEqual(plans(), [plan]);
+});
+
+test("generation is disabled for an empty draft and returns from Map to Calendar when applied", async () => {
+  await mount();
+  assert(button("Generate schedules").disabled);
+  await act(async () => root.unmount());
+  seed();
+  await mount();
+  await click(button("Map"));
+  await click(button("Generate schedules"));
+  await click(button("Use this schedule"));
+  assert.equal(button("Calendar").getAttribute("aria-pressed"), "true");
 });

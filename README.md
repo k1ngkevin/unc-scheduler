@@ -13,6 +13,9 @@ across separate tools.
 - Add and remove courses.
 - Compare section meeting times and snapshot seat counts.
 - Select sections by component, such as a lecture and a recitation.
+- Generate section combinations for your selected courses, preview them, and
+  sort by earliest end time, latest start time, or most compact. Use this schedule
+  applies the option and autosaves it to the current draft and active named plan.
 - View selected meetings on a weekly calendar, with overlaps side by side.
 - Inspect calendar details, including instructors, locations, and credits.
 - Switch to a campus map showing buildings for selected classes.
@@ -41,6 +44,20 @@ flag unavailable classes, and preserve the original selections when saving a
 copy. A duplicate name gets a `(copy)` suffix. If automatic clipboard access
 is unavailable, the link can be selected and copied manually.
 
+Schedule generation chooses one section per listed component and rejects
+overlapping known meeting times. Earliest end minimizes the latest class end
+across the week; latest start maximizes the earliest class start. Most compact
+minimizes same-day gaps summed across the week. Options with unknown meeting
+times appear last, and their unknown meetings cannot be checked for conflicts.
+Browsing and sorting options does not save changes until Use this schedule.
+
+All sections are considered regardless of seat availability. The catalog does
+not provide lecture/recitation linkage or complete enrollment rules, so verify
+the combination in ConnectCarolina. The search yields to keep the UI responsive
+and can be canceled by closing the preview. It stops after 5,000 options or
+100,000 candidate checks, explicitly labels partial results, and sorts the
+options it found; a limited search may miss better combinations.
+
 ## Roadmap
 
 After the reliability pass, test with UNC students building real schedules,
@@ -53,7 +70,6 @@ Potential follow-up features:
 2. Flag difficult transitions between consecutive classes using walking
    distance or travel time.
 3. Add calendar export.
-4. Explore automatic schedule generation if student feedback supports it.
 
 ## Tech stack
 
@@ -82,11 +98,13 @@ NEXT_PUBLIC_SUPABASE_PROJECT_ID=your_supabase_project_id
 
 The `course-data` storage bucket must be publicly readable and contain:
 
-- `scraped_data/2272.json`: an array of course sections.
+- `scraped_data/2272.json`: an object with `classes` (an array of course sections)
+  and `scraped_date` (the scrape timestamp).
 - `scraped_data/building_code_coords.json`: building coordinates keyed by
   building code, with `name`, `lat`, and `long` fields.
 
-The app currently loads the hardcoded term `2272` (spring 2027). The data URLs are defined in
+The app defaults to `2272` (spring 2027); the semester selector also loads
+`scraped_data/2269.json` for fall 2026 in the same format. The data URLs are defined in
 [components/Scheduler.tsx](components/Scheduler.tsx), and the expected data shapes
 are in [lib/types.ts](lib/types.ts). Do not expose a Supabase private key to the
 browser.
@@ -107,7 +125,7 @@ Then open [http://localhost:3000](http://localhost:3000).
 | `npm run build`    | Create a production build.    |
 | `npm run start`    | Serve the production build.   |
 | `npm run lint`     | Run ESLint.                   |
-| `npm test`         | Test saved schedules and editor interactions. |
+| `npm test`         | Test generation, sorting, saved schedules, and editor interactions. |
 | `npx tsc --noEmit` | Check TypeScript types.       |
 
 `npm run build -- --webpack` is an alternative build command when troubleshooting
